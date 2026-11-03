@@ -1,0 +1,595 @@
+{%- if section.settings.background_type == 'boxed' -%}
+  {%- assign is_boxed = true -%}
+{%- else -%}
+  {%- assign is_boxed = false -%}
+{%- endif -%}
+
+{%- liquid
+  assign image_link = section.settings.image_link
+  assign mobile_image = section.settings.mobile_image
+  assign image = section.settings.image | default: mobile_image
+  assign video = section.settings.video
+  assign reveal_on_scroll = section.settings.reveal_on_scroll
+  assign image_aspect_ratio = image.aspect_ratio | default: 2.63
+  assign mobile_aspect_ratio = mobile_image.aspect_ratio | default: image_aspect_ratio
+  assign image_loading = 'lazy'
+
+  if section.index == 1
+    assign image_loading = 'eager'
+  endif
+
+  if video != blank
+    assign image_aspect_ratio = video.aspect_ratio | default: video.preview_image.aspect_ratio | default: 1.777778
+    assign mobile_aspect_ratio = image_aspect_ratio
+    assign reveal_on_scroll = false
+  endif
+-%}
+
+<style>
+  {%- assign text_position = section.settings.text_position | split: '_' | first -%}
+
+  {%- case text_position -%}
+    {%- when 'top' -%}
+      {%- assign section_items_alignment = 'flex-start' -%}
+    {%- when 'middle' -%}
+      {%- assign section_items_alignment = 'center' -%}
+    {%- when 'bottom' -%}
+      {%- assign section_items_alignment = 'flex-end' -%}
+  {%- endcase -%}
+
+  #shopify-section-{{ section.id }} {
+    {%- if section.settings.text_color == 'rgba(0,0,0,0)' -%}
+      {%- assign heading_color = settings.heading_color -%}
+      {%- assign text_color = settings.text_color -%}
+    {%- else -%}
+      {%- assign heading_color = section.settings.text_color -%}
+      {%- assign text_color = section.settings.text_color -%}
+    {%- endif -%}
+
+    {%- if section.settings.button_background == 'rgba(0,0,0,0)' -%}
+      {%- assign button_background = settings.primary_button_background -%}
+    {%- else -%}
+      {%- assign button_background = section.settings.button_background -%}
+    {%- endif -%}
+
+    {%- if section.settings.button_text_color == 'rgba(0,0,0,0)' -%}
+      {%- assign button_text_color = settings.primary_button_text_color -%}
+    {%- else -%}
+      {%- assign button_text_color = section.settings.button_text_color -%}
+    {%- endif -%}
+
+    --heading-color: {{ heading_color.red }}, {{ heading_color.green }}, {{ heading_color.blue }};
+    --text-color: {{ text_color.red }}, {{ text_color.green }}, {{ text_color.blue }};
+    --primary-button-background: {{ button_background.red }}, {{ button_background.green }}, {{ button_background.blue }};
+    --primary-button-text-color: {{ button_text_color.red }}, {{ button_text_color.green }}, {{ button_text_color.blue }};
+
+    --fctr-desktop-ratio: {{ image_aspect_ratio }};
+    --fctr-mobile-ratio: {{ mobile_aspect_ratio }};
+    --fctr-desktop-focal-point: {{ image.presentation.focal_point | default: '50% 50%' }};
+    --fctr-mobile-focal-point: {{ mobile_image.presentation.focal_point | default: image.presentation.focal_point | default: '50% 50%' }};
+
+    --section-items-alignment: {{ section_items_alignment }};
+    --section-overlay-color: {{ section.settings.overlay_color.red }}, {{ section.settings.overlay_color.green }}, {{ section.settings.overlay_color.blue }};
+    --section-overlay-opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+  }
+</style>
+
+<section class="section {% unless is_boxed %}section--flush{% endunless %}">
+  <div {% if is_boxed %}class="container"{% endif %}>
+    <image-with-text-overlay {% if reveal_on_scroll %}reveal-on-scroll{% endif %} class="image-overlay image-overlay--{{ section.settings.section_height }} fctr-media-overlay{% if section.settings.section_height == 'auto' %} fctr-media-overlay--auto{% endif %}{% if image_link != blank %} fctr-image-overlay--linked{% endif %}">
+      <div class="image-overlay__image-wrapper">
+        {%- if video != blank -%}
+          {{- video | video_tag: image_size: '2000x', autoplay: true, loop: true, muted: true, playsinline: true, controls: false, preload: 'metadata', class: 'fctr-media-overlay__video' -}}
+        {%- elsif image != blank -%}
+          <picture class="fctr-media-overlay__picture">
+            {%- if mobile_image != blank -%}
+              <source
+                media="(max-width: 740px)"
+                srcset="{{ mobile_image | image_url: width: 375 }} 375w, {{ mobile_image | image_url: width: 550 }} 550w, {{ mobile_image | image_url: width: 750 }} 750w, {{ mobile_image | image_url: width: 1100 }} 1100w, {{ mobile_image | image_url: width: 1500 }} 1500w"
+                sizes="100vw"
+                width="{{ mobile_image.width }}"
+                height="{{ mobile_image.height }}"
+              >
+            {%- endif -%}
+
+            {%- if reveal_on_scroll -%}
+              {{- image | image_url: width: image.width | image_tag: loading: image_loading, sizes: '100vw', widths: '375,550,750,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000', reveal: true, class: 'image-overlay__image' -}}
+            {%- else -%}
+              {{- image | image_url: width: image.width | image_tag: loading: image_loading, sizes: '100vw', widths: '375,550,750,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000', class: 'image-overlay__image' -}}
+            {%- endif -%}
+          </picture>
+        {%- else -%}
+          {%- capture image_classes -%}image-overlay__image image-overlay__image--placeholder image-overlay__image--{{ section.settings.section_height }}{%- endcapture -%}
+
+          {%- if reveal_on_scroll -%}
+            {{- 'lifestyle-1' | placeholder_svg_tag: image_classes | replace: '<svg', '<svg reveal' -}}
+          {%- else -%}
+            {{- 'lifestyle-1' | placeholder_svg_tag: image_classes -}}
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+
+      {%- if video != blank -%}
+        <fctr-overlay-video-toggle class="fctr-media-overlay__playback">
+          <button
+            type="button"
+            class="fctr-media-overlay__toggle"
+            aria-label="{{ section.settings.video_pause_label | escape }}"
+            data-pause-label="{{ section.settings.video_pause_label | escape }}"
+            data-play-label="{{ section.settings.video_play_label | escape }}"
+            hidden
+          >
+            <svg class="fctr-media-overlay__pause-icon" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 3h4v12H4zm6 0h4v12h-4z"/></svg>
+            <svg class="fctr-media-overlay__play-icon" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="currentColor" d="m5 2 11 7-11 7z"/></svg>
+          </button>
+        </fctr-overlay-video-toggle>
+      {%- endif -%}
+
+      {%- if image_link != blank -%}
+        {%- assign image_link_label = section.settings.image_link_label | default: video.alt | default: image.alt | default: section.settings.title | default: section.settings.button_text | default: shop.name -%}
+        <a
+          class="fctr-image-overlay__image-link"
+          href="{{ image_link | escape }}"
+          aria-label="{{ image_link_label | escape }}"
+        ></a>
+      {%- endif -%}
+
+      {%- capture section_content -%}
+        {%- assign text_alignment = section.settings.text_position | split: '_' | last -%}
+
+        <div class="image-overlay__content-wrapper">
+          <div class="image-overlay__content content-box content-box--{{ section.settings.text_width }} content-box--text-{{ text_alignment }} content-box--{{ text_alignment }} text-container">
+            {%- if section.settings.subheading != blank -%}
+              <h2 class="heading heading--small">
+                <split-lines {% if reveal_on_scroll %}reveal{% endif %}>{{ section.settings.subheading | escape }}</split-lines>
+              </h2>
+            {%- endif -%}
+
+            {%- if section.settings.title != blank -%}
+              <h3 class="heading h2">
+                <split-lines {% if reveal_on_scroll %}reveal{% endif %}>{{ section.settings.title | escape }}</split-lines>
+              </h3>
+            {%- endif -%}
+
+            {%- if section.settings.content != blank or section.settings.button_text != blank -%}
+              <div class="image-overlay__text-container" {% if reveal_on_scroll %}reveal{% endif %}>
+                {%- if section.settings.content != blank-%}
+                  {{- section.settings.content -}}
+                {%- endif -%}
+
+                {%- if section.settings.button_text != blank -%}
+                  {%- if section.settings.link_style == 'link' -%}
+                    <a href="{{ section.settings.button_link }}" class="multi-column__link heading heading--small link">{{ section.settings.button_text | escape }}</a>
+                  {%- else -%}
+                    <div class="button-wrapper">
+                      <a href="{{ section.settings.button_link }}" class="button button--primary">{{ section.settings.button_text | escape }}</a>
+                    </div>
+                  {%- endif -%}
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endcapture -%}
+
+      <div class="{% unless is_boxed %}container {% endunless %}{% if image_link != blank %}fctr-image-overlay__content-layer{% endif %}" {% if is_boxed %}style="width: 100%"{% endif %}>
+        {{- section_content -}}
+      </div>
+    </image-with-text-overlay>
+  </div>
+</section>
+
+{% stylesheet %}
+  .fctr-media-overlay {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .fctr-media-overlay--auto {
+    --image-aspect-ratio: var(--fctr-desktop-ratio);
+  }
+
+  .fctr-media-overlay--auto > .image-overlay__image-wrapper {
+    padding-bottom: calc(100% / var(--image-aspect-ratio));
+  }
+
+  .fctr-media-overlay__picture,
+  .fctr-media-overlay__video {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .fctr-media-overlay__video {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .fctr-media-overlay__picture > .image-overlay__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--fctr-desktop-focal-point) !important;
+  }
+
+  .fctr-media-overlay__playback {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    z-index: 4;
+  }
+
+  .fctr-media-overlay__toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffffff;
+    cursor: pointer;
+  }
+
+  .fctr-media-overlay__toggle[hidden],
+  .fctr-media-overlay__toggle .fctr-media-overlay__play-icon,
+  .fctr-media-overlay__toggle[data-paused] .fctr-media-overlay__pause-icon {
+    display: none;
+  }
+
+  .fctr-media-overlay__toggle[data-paused] .fctr-media-overlay__play-icon {
+    display: block;
+  }
+
+  .fctr-media-overlay__toggle:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+  }
+
+  @media screen and (max-width: 740px) {
+    .fctr-media-overlay--auto {
+      --image-aspect-ratio: var(--fctr-mobile-ratio);
+    }
+
+    .fctr-media-overlay__picture > .image-overlay__image {
+      object-position: var(--fctr-mobile-focal-point) !important;
+    }
+  }
+
+  .fctr-image-overlay--linked {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .fctr-image-overlay--linked > .fctr-image-overlay__image-link {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: block;
+  }
+
+  .fctr-image-overlay__image-link:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: -6px;
+    box-shadow: inset 0 0 0 9px #000000;
+  }
+
+  .fctr-image-overlay--linked > .fctr-image-overlay__content-layer {
+    position: relative;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .fctr-image-overlay__content-layer a,
+  .fctr-image-overlay__content-layer button {
+    pointer-events: auto;
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('fctr-overlay-video-toggle')) {
+    customElements.define('fctr-overlay-video-toggle', class extends HTMLElement {
+      connectedCallback() {
+        const video = this.closest('.fctr-media-overlay')?.querySelector('video');
+        const button = this.querySelector('button');
+        if (!video || !button) return;
+
+        this.controller?.abort();
+        this.controller = new AbortController();
+        const options = { signal: this.controller.signal };
+        const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const update = () => {
+          button.toggleAttribute('data-paused', video.paused);
+          button.setAttribute('aria-label', video.paused ? button.dataset.playLabel : button.dataset.pauseLabel);
+        };
+        const respectMotion = () => {
+          if (motion.matches) {
+            video.autoplay = false;
+            video.pause();
+          }
+        };
+
+        button.hidden = false;
+        button.addEventListener('click', () => {
+          if (video.paused) {
+            video.play().catch(update);
+          } else {
+            video.pause();
+          }
+        }, options);
+        video.addEventListener('play', update, options);
+        video.addEventListener('pause', update, options);
+        motion.addEventListener('change', respectMotion, options);
+        respectMotion();
+        update();
+      }
+
+      disconnectedCallback() {
+        this.controller?.abort();
+      }
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Image with text overlay",
+  "class": "shopify-section--image-with-text-overlay",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "custom.overlay"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "reveal_on_scroll",
+      "label": "Reveal on scroll",
+      "info": "Show animation when section becomes visible.",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_height",
+      "label": "Section height",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Original media ratio"
+        },
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "info": "Original media ratio shows the full image or video. Mobile images use their own ratio.",
+      "default": "auto"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Desktop image",
+      "info": "2000 x 980px recommended. Select an image or connect a dynamic source. Used when no video is selected."
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile image",
+      "info": "Optional. Select an image or connect a dynamic source. Used at 740px and below when no video is selected. Falls back to the desktop image."
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video",
+      "info": "Select a Shopify-hosted video or connect a video file dynamic source. Takes priority over both images on every device. Plays muted and loops."
+    },
+    {
+      "type": "text",
+      "id": "video_pause_label",
+      "label": "Pause video accessibility label",
+      "default": "Pause video"
+    },
+    {
+      "type": "text",
+      "id": "video_play_label",
+      "label": "Play video accessibility label",
+      "default": "Play video"
+    },
+    {
+      "type": "url",
+      "id": "image_link",
+      "label": "Image / video link",
+      "info": "Choose a destination or connect a compatible dynamic source. Applies to both images and video. Leave blank for no link."
+    },
+    {
+      "type": "text",
+      "id": "image_link_label",
+      "label": "Media link accessibility label",
+      "info": "Describe the destination, such as Shop Sting Fan Gear. If blank, the media alt text or heading is used."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Subheading"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Image with text overlay"
+    },
+    {
+      "type": "richtext",
+      "id": "content",
+      "label": "Content",
+      "default": "<p>Use overlay text to give your customers insight into your brand.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "select",
+      "id": "link_style",
+      "label": "Link style",
+      "options": [
+        {
+          "value": "link",
+          "label": "Link"
+        },
+        {
+          "value": "button",
+          "label": "Button"
+        }
+      ],
+      "default": "link"
+    },
+    {
+      "type": "select",
+      "id": "background_type",
+      "label": "Background",
+      "options": [
+        {
+          "value": "full_width",
+          "label": "Full width"
+        },
+        {
+          "value": "boxed",
+          "label": "Boxed"
+        }
+      ],
+      "default": "full_width"
+    },
+    {
+      "type": "select",
+      "id": "text_width",
+      "label": "Text width",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        },
+        {
+          "value": "fill",
+          "label": "Fill screen"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "select",
+      "id": "text_position",
+      "label": "Text position",
+      "options": [
+        {
+          "value": "top_left",
+          "label": "Top left"
+        },
+        {
+          "value": "top_center",
+          "label": "Top center"
+        },
+        {
+          "value": "top_right",
+          "label": "Top right"
+        },
+        {
+          "value": "middle_left",
+          "label": "Middle left"
+        },
+        {
+          "value": "middle_center",
+          "label": "Middle center"
+        },
+        {
+          "value": "middle_right",
+          "label": "Middle right"
+        },
+        {
+          "value": "bottom_left",
+          "label": "Bottom left"
+        },
+        {
+          "value": "bottom_center",
+          "label": "Bottom center"
+        },
+        {
+          "value": "bottom_right",
+          "label": "Bottom right"
+        }
+      ],
+      "default": "middle_center"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Overlay opacity",
+      "default": 30
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image with text overlay"
+    }
+  ]
+}
+{% endschema %}

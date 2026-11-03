@@ -1,0 +1,49 @@
+{%- comment -%}
+  TEAM ANNOUNCEMENT BAR
+  Pulls from Team metaobject fields:
+    - announcement_icon
+    - announcement_text
+    - announcement_terms_url
+
+  Only renders if announcement_text is present.
+{%- endcomment -%}
+
+{%- liquid
+  assign team_obj = team
+
+  if team_obj == blank
+    break
+  endif
+
+  assign announcement_text = team_obj.announcement_text.value | default: ''
+  assign icon = team_obj.announcement_icon.value
+  assign terms_url = team_obj.announcement_terms_url.value
+-%}
+
+{%- if announcement_text != blank -%}
+  <div class="team-announcement" role="region" aria-label="Announcement">
+    <div class="team-announcement__inner">
+
+      <div class="team-announcement__main">
+        {%- if icon != blank -%}
+          <span class="team-announcement__icon" aria-hidden="true">
+            <img
+              src="{{ icon | image_url: width: 28 }}"
+              alt=""
+              loading="lazy"
+              width="14"
+              height="14"
+            >
+          </span>
+        {%- endif -%}
+
+        <span class="team-announcement__text">{{ announcement_text }}</span>
+      </div>
+
+      {%- if terms_url != blank -%}
+        <a class="team-announcement__terms" href="{{ terms_url }}">Terms</a>
+      {%- endif -%}
+
+    </div>
+  </div>
+{%- endif -%}

@@ -1,0 +1,431 @@
+{% comment %}
+  Team Category Grid (Reebok-style) — Auto-Hide + Dynamic Metaobject
+  -----------------------------------------------------------------
+  - 4-up responsive category grid
+  - Tile background images can be:
+      (1) Static image picker
+      (2) Dynamic from Team metaobject via field key (e.g. training_image)
+  - Title/link can also be dynamic from Team metaobject (optional)
+  - Auto-hides the ENTIRE section if no tiles have any content to display
+
+  Shopify schema gotchas:
+  - Some theme editors reject blank defaults for text settings.
+  - We use sentinel defaults like "none" and treat them as blank in Liquid.
+{% endcomment %}
+
+{%- liquid
+  assign team_obj = nil
+
+  if team != blank
+    assign team_obj = team
+  elsif section.settings.team_metaobject != blank
+    assign team_obj = section.settings.team_metaobject
+  endif
+
+  assign heading_clean = section.settings.heading | strip
+  if heading_clean == 'none'
+    assign heading_clean = ''
+  endif
+
+  assign has_content = false
+-%}
+
+{%- comment %}
+  First pass: determine if ANY tile has displayable content (image or title),
+  considering BOTH static settings and team metaobject dynamic keys.
+{% endcomment %}
+{%- for block in section.blocks -%}
+  {%- liquid
+    assign tile_image = block.settings.image
+
+    assign tile_title = block.settings.title | strip
+    if tile_title == 'none'
+      assign tile_title = ''
+    endif
+
+    assign team_image_key = block.settings.team_image_field | strip
+    if team_image_key == 'none'
+      assign team_image_key = ''
+    endif
+
+    assign team_title_key = block.settings.team_title_field | strip
+    if team_title_key == 'none'
+      assign team_title_key = ''
+    endif
+
+    if tile_image != blank
+      assign has_content = true
+    endif
+
+    if has_content == false and tile_title != blank
+      assign has_content = true
+    endif
+
+    if has_content == false and team_obj != blank and team_image_key != blank
+      assign field = team_obj[team_image_key]
+      if field != blank and field.value != blank
+        assign has_content = true
+      endif
+    endif
+
+    if has_content == false and team_obj != blank and team_title_key != blank
+      assign tfield = team_obj[team_title_key]
+      if tfield != blank and tfield.value != blank
+        assign has_content = true
+      endif
+    endif
+  -%}
+{%- endfor -%}
+
+{%- if has_content -%}
+
+<section class="fctr-catgrid" style="
+  --fctr-overlay-color: {{ section.settings.overlay_color }};
+  --fctr-overlay-opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+  --fctr-gap: {{ section.settings.gap }}px;
+  --fctr-min-height: {{ section.settings.min_height }}px;
+">
+  <div class="fctr-catgrid__inner page-width">
+    {% if heading_clean != blank %}
+      <h2 class="fctr-catgrid__heading">{{ heading_clean }}</h2>
+    {% endif %}
+
+    <div class="fctr-catgrid__grid">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign tile_image = block.settings.image
+
+          assign tile_title = block.settings.title | strip
+          if tile_title == 'none'
+            assign tile_title = ''
+          endif
+
+          assign tile_subtitle = block.settings.subtitle | strip
+          if tile_subtitle == 'none'
+            assign tile_subtitle = ''
+          endif
+
+          assign tile_link = block.settings.link
+
+          assign team_image_key = block.settings.team_image_field | strip
+          if team_image_key == 'none'
+            assign team_image_key = ''
+          endif
+
+          assign team_title_key = block.settings.team_title_field | strip
+          if team_title_key == 'none'
+            assign team_title_key = ''
+          endif
+
+          assign team_link_key = block.settings.team_link_field | strip
+          if team_link_key == 'none'
+            assign team_link_key = ''
+          endif
+
+          if tile_image == blank and team_obj != blank and team_image_key != blank
+            assign field = team_obj[team_image_key]
+            if field != blank and field.value != blank
+              assign tile_image = field.value
+            endif
+          endif
+
+          if tile_title == blank and team_obj != blank and team_title_key != blank
+            assign tfield = team_obj[team_title_key]
+            if tfield != blank and tfield.value != blank
+              assign tile_title = tfield.value | strip
+            endif
+          endif
+
+          if tile_link == blank and team_obj != blank and team_link_key != blank
+            assign lfield = team_obj[team_link_key]
+            if lfield != blank and lfield.value != blank
+              assign tile_link = lfield.value
+            endif
+          endif
+
+          assign tag = 'div'
+          if tile_link != blank
+            assign tag = 'a'
+          endif
+
+          assign tile_has_content = false
+          if tile_image != blank or tile_title != blank
+            assign tile_has_content = true
+          endif
+        -%}
+
+        {% if tile_has_content %}
+          <{{ tag }}
+            class="fctr-catgrid__tile"
+            {% if tag == 'a' %}href="{{ tile_link }}"{% endif %}
+            {{ block.shopify_attributes }}
+          >
+            <div class="fctr-catgrid__media">
+              {% if tile_image != blank %}
+                {{ tile_image | image_url: width: 1600 | image_tag:
+                  class: 'fctr-catgrid__img',
+                  loading: 'lazy',
+                  sizes: '(min-width: 990px) 25vw, (min-width: 600px) 50vw, 100vw',
+                  alt: tile_title | default: 'Category'
+                }}
+              {% else %}
+                <div class="fctr-catgrid__placeholder"></div>
+              {% endif %}
+              <div class="fctr-catgrid__overlay"></div>
+            </div>
+
+            <div class="fctr-catgrid__content">
+              {% if tile_subtitle != blank %}
+                <div class="fctr-catgrid__subtitle">{{ tile_subtitle }}</div>
+              {% endif %}
+              {% if tile_title != blank %}
+                <div class="fctr-catgrid__title">{{ tile_title }}</div>
+              {% endif %}
+
+              {% if section.settings.show_cta and tile_link != blank %}
+                <span class="fctr-catgrid__cta">{{ block.settings.link_text }}</span>
+              {% endif %}
+            </div>
+          </{{ tag }}>
+        {% endif %}
+
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+<style>
+  .fctr-catgrid { width: 100%; }
+  .fctr-catgrid .page-width {
+    max-width: var(--page-width, 1200px);
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .fctr-catgrid__heading {
+    margin: 0 0 18px 0;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .fctr-catgrid__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--fctr-gap);
+  }
+
+  @media (max-width: 1024px) {
+    .fctr-catgrid__grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .fctr-catgrid__grid { grid-template-columns: 1fr; }
+  }
+
+  .fctr-catgrid__tile {
+    position: relative;
+    display: block;
+    min-height: var(--fctr-min-height);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 0;
+  }
+
+  .fctr-catgrid__media { position: absolute; inset: 0; }
+
+  .fctr-catgrid__img,
+  .fctr-catgrid__placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1);
+    transition: transform 300ms ease;
+  }
+
+  .fctr-catgrid__placeholder { background: #e9e9e9; }
+
+  .fctr-catgrid__overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--fctr-overlay-color);
+    opacity: var(--fctr-overlay-opacity);
+    transition: opacity 250ms ease;
+  }
+
+  .fctr-catgrid__content {
+    position: absolute;
+    left: 18px;
+    bottom: 18px;
+    z-index: 2;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .fctr-catgrid__subtitle {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-bottom: 6px;
+  }
+
+  .fctr-catgrid__title {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.05;
+  }
+
+  .fctr-catgrid__cta {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 10px 14px;
+    background: #fff;
+    color: #000;
+  }
+
+  @media (hover: hover) {
+    .fctr-catgrid__tile:hover .fctr-catgrid__overlay {
+      opacity: calc(var(--fctr-overlay-opacity) + 0.15);
+    }
+    .fctr-catgrid__tile:hover .fctr-catgrid__img {
+      transform: scale(1.03);
+    }
+  }
+</style>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "Team category grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section heading",
+      "default": "none"
+    },
+    {
+      "type": "metaobject",
+      "id": "team_metaobject",
+      "label": "Team metaobject",
+      "metaobject_type": "team",
+      "info": "Optional. If your theme already exposes a global `team` object, leave blank."
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay opacity (%)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 35
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Tile gap (px)",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "min_height",
+      "label": "Min tile height (px)",
+      "min": 220,
+      "max": 600,
+      "step": 10,
+      "default": 360
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "Show CTA button text",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "tile",
+      "name": "Tile",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image (static fallback)"
+        },
+        {
+          "type": "text",
+          "id": "team_image_field",
+          "label": "Team image field key",
+          "default": "none",
+          "info": "Example: training_image (image/file field on Team metaobject)"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title (static fallback)",
+          "default": "Category"
+        },
+        {
+          "type": "text",
+          "id": "team_title_field",
+          "label": "Team title field key",
+          "default": "none",
+          "info": "Optional. If Title is blank, pulls from this field."
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitle (optional)",
+          "default": "none"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link (static fallback)"
+        },
+        {
+          "type": "text",
+          "id": "team_link_field",
+          "label": "Team link field key",
+          "default": "none",
+          "info": "Optional. If Link is blank, pulls from this URL field."
+        },
+        {
+          "type": "text",
+          "id": "link_text",
+          "label": "CTA text",
+          "default": "Shop Now"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [
+    {
+      "name": "Team category grid",
+      "blocks": [
+        { "type": "tile", "settings": { "title": "Training", "team_image_field": "training_image" } },
+        { "type": "tile", "settings": { "title": "Running", "team_image_field": "running_image" } },
+        { "type": "tile", "settings": { "title": "Classics", "team_image_field": "classics_image" } },
+        { "type": "tile", "settings": { "title": "Basketball", "team_image_field": "basketball_image" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

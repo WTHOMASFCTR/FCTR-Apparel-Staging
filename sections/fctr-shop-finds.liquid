@@ -1,0 +1,238 @@
+{% liquid
+  assign above_fold = false
+  if section.index == nil or section.index < 3
+    assign above_fold = true
+  endif
+  assign grid_id = 'FctrFindsGrid-' | append: section.id
+  assign heading_id = 'FctrFindsHeading-' | append: section.id
+%}
+{% capture featured_cards %}
+  {% for block in section.blocks %}
+    {% render 'fctr-find-card', product: block.settings.product, mode: 'grid', stock_only: section.settings.stock_only, audience: block.settings.audience, title_override: block.settings.title, image_override: block.settings.image, editor_attributes: block.shopify_attributes %}
+  {% endfor %}
+{% endcapture %}
+{% assign featured_cards = featured_cards | strip %}
+{% style %}
+  #shopify-section-{{ section.id }} .fctr-finds {
+    --fctr-finds-accent: {{ section.settings.accent }};
+    --fctr-finds-dark: {{ section.settings.dark_background }};
+    --fctr-finds-surface: {{ section.settings.surface }};
+    --fctr-finds-text: {{ section.settings.text_color }};
+    --fctr-finds-image: {{ section.settings.image_background }};
+  }
+{% endstyle %}
+<fctr-shop-finds class="fctr-finds" aria-labelledby="{{ heading_id }}" data-results-label="{{ 'fctr.showcase.results' | t: count: '__COUNT__' | escape }}">
+  <div class="fctr-finds__wrap">
+    {% if section.settings.show_announcement and section.settings.announcement != blank %}
+      <div class="fctr-finds__announcement">{{ section.settings.announcement | escape }}</div>
+    {% endif %}
+    <div class="fctr-finds__hero">
+      <div class="fctr-finds__copy">
+        {% if section.settings.eyebrow != blank %}<p class="fctr-finds__eyebrow fctr-finds__eyebrow--accent">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+        <{{ section.settings.heading_tag }} class="fctr-finds__heading" id="{{ heading_id }}">{{ section.settings.heading | escape | newline_to_br }}</{{ section.settings.heading_tag }}>
+        {% if section.settings.description != blank %}<div class="fctr-finds__description">{{ section.settings.description }}</div>{% endif %}
+        {% if section.settings.button_label != blank %}
+          <a class="fctr-finds__button" href="{% if section.settings.button_link != blank %}{{ section.settings.button_link }}{% else %}#{{ grid_id }}{% endif %}">{{ section.settings.button_label | escape }} <span aria-hidden="true">↗</span></a>
+        {% endif %}
+      </div>
+      <div class="fctr-finds__hero-products">
+        {% render 'fctr-find-card', product: section.settings.hero_product_1, mode: 'hero', stock_only: section.settings.stock_only, above_fold: above_fold, priority: above_fold, label: section.settings.hero_label_1, image_override: section.settings.hero_image_1 %}
+        {% render 'fctr-find-card', product: section.settings.hero_product_2, mode: 'hero', stock_only: section.settings.stock_only, above_fold: above_fold, label: section.settings.hero_label_2, image_override: section.settings.hero_image_2 %}
+      </div>
+    </div>
+    {% if section.settings.show_categories %}
+      <nav class="fctr-finds__categories" aria-label="{{ 'fctr.showcase.categories' | t }}">
+        {% if section.settings.men_link != blank %}<a href="{{ section.settings.men_link }}">{{ section.settings.men_label | escape }} <span aria-hidden="true">↗</span></a>{% endif %}
+        {% if section.settings.women_link != blank %}<a href="{{ section.settings.women_link }}">{{ section.settings.women_label | escape }} <span aria-hidden="true">↗</span></a>{% endif %}
+        {% if section.settings.youth_link != blank %}<a href="{{ section.settings.youth_link }}">{{ section.settings.youth_label | escape }} <span aria-hidden="true">↗</span></a>{% endif %}
+      </nav>
+    {% endif %}
+    {% if section.settings.show_products and featured_cards != blank %}
+      <div class="fctr-finds__featured" id="{{ grid_id }}">
+        <div class="fctr-finds__section-heading">
+          <div>
+            {% if section.settings.grid_eyebrow != blank %}<p class="fctr-finds__eyebrow">{{ section.settings.grid_eyebrow | escape }}</p>{% endif %}
+            {% if section.settings.grid_heading != blank %}<h2 class="fctr-finds__grid-heading">{{ section.settings.grid_heading | escape }}</h2>{% endif %}
+          </div>
+          {% if section.settings.show_filters %}
+            <div class="fctr-finds__filters" role="group" aria-label="{{ 'fctr.showcase.filter_label' | t }}" hidden>
+              <button type="button" data-fctr-filter="all" aria-pressed="true" aria-controls="{{ grid_id }}-products">{{ 'fctr.showcase.all_filter' | t }}</button>
+              <button type="button" data-fctr-filter="men" aria-pressed="false" aria-controls="{{ grid_id }}-products">{{ 'fctr.showcase.men' | t }}</button>
+              <button type="button" data-fctr-filter="women" aria-pressed="false" aria-controls="{{ grid_id }}-products">{{ 'fctr.showcase.women' | t }}</button>
+              <button type="button" data-fctr-filter="youth" aria-pressed="false" aria-controls="{{ grid_id }}-products">{{ 'fctr.showcase.youth' | t }}</button>
+            </div>
+          {% endif %}
+        </div>
+        <div class="fctr-finds__grid" id="{{ grid_id }}-products">{{ featured_cards }}</div>
+        <p class="fctr-finds__status" aria-live="polite" data-fctr-status></p>
+        {% if section.settings.disclaimer != blank %}<p class="fctr-finds__disclaimer">{{ section.settings.disclaimer | escape }}</p>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</fctr-shop-finds>
+{% stylesheet %}
+  .fctr-finds { display: block; color: var(--fctr-finds-text); background: var(--fctr-finds-surface); font-family: var(--text-font-family, sans-serif); line-height: 1.55; }
+  .fctr-finds *, .fctr-finds *::before, .fctr-finds *::after { box-sizing: border-box; }
+  .fctr-finds [hidden] { display: none !important; }
+  .fctr-finds a { color: inherit; text-decoration: none; }
+  .fctr-finds a:focus-visible, .fctr-finds button:focus-visible { outline: 3px solid var(--fctr-finds-accent); outline-offset: 4px; }
+  .fctr-finds img { display: block; max-width: 100%; }
+  .fctr-finds__wrap { max-width: 1440px; width: 100%; margin-inline: auto; }
+  .fctr-finds__announcement { padding: 11px 16px; text-align: center; color: var(--fctr-finds-dark); background: var(--fctr-finds-accent); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .fctr-finds__hero { display: grid; grid-template-columns: 42% 58%; min-height: 440px; background: var(--fctr-finds-dark); color: #fff; }
+  .fctr-finds__copy { padding: 48px 9% 42px; }
+  .fctr-finds__eyebrow { margin: 0 0 14px; font-family: var(--heading-font-family, sans-serif); font-size: 11px; font-weight: var(--heading-font-weight, 700); line-height: 1.5; letter-spacing: .1em; text-transform: uppercase; }
+  .fctr-finds__eyebrow--accent { color: var(--fctr-finds-accent); }
+  .fctr-finds__heading { margin: 0 0 22px; color: #fff; font-family: var(--heading-font-family, sans-serif); font-weight: var(--heading-font-weight, 700); font-size: clamp(42px, 5.8vw, 80px); line-height: .99; letter-spacing: -.055em; text-transform: uppercase; overflow-wrap: normal; }
+  .fctr-finds__description { max-width: 325px; margin-bottom: 23px; color: #d5dacd; font-size: 14px; }
+  .fctr-finds__description p { margin: 0; }
+  .fctr-finds .fctr-finds__button { display: inline-flex; gap: 18px; align-items: center; justify-content: center; min-height: 46px; padding: 13px 22px; color: var(--fctr-finds-dark); background: var(--fctr-finds-accent); font-size: 13px; font-weight: 600; line-height: 1.5; text-transform: uppercase; }
+  .fctr-finds__hero-products { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; align-self: stretch; padding: 22px 22px 22px 0; }
+  .fctr-finds__hero-card { position: relative; display: block; min-width: 0; overflow: hidden; background: var(--fctr-finds-image); }
+  .fctr-finds__hero-image { width: 100%; height: 100%; max-height: 490px; object-fit: cover; object-position: 50% 24%; }
+  .fctr-finds__hero-label { position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); padding: 5px 8px; color: var(--fctr-finds-text); background: var(--fctr-finds-surface); font-size: 11px; line-height: 1.5; text-transform: uppercase; }
+  .fctr-finds__hero-price { position: absolute; bottom: 15px; left: 15px; max-width: calc(100% - 30px); padding: 10px 13px; color: var(--fctr-finds-dark); background: var(--fctr-finds-accent); font-family: var(--heading-font-family, sans-serif); font-weight: var(--heading-font-weight, 700); font-size: clamp(30px, 5vw, 60px); line-height: 1.05; }
+  .fctr-finds__from { display: block; margin-bottom: 3px; font-family: var(--text-font-family, sans-serif); font-size: 11px; font-weight: 400; letter-spacing: 0; }
+  .fctr-finds__categories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid #d9ddd4; }
+  .fctr-finds__categories a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 62px; padding: 18px 7%; font-family: var(--heading-font-family, sans-serif); font-size: 14px; font-weight: var(--heading-font-weight, 700); text-transform: uppercase; }
+  .fctr-finds__categories a + a { border-left: 1px solid #d9ddd4; }
+  .fctr-finds__featured { padding: 40px 4%; scroll-margin-top: 100px; }
+  .fctr-finds__section-heading { display: flex; gap: 20px; align-items: end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 22px; }
+  .fctr-finds__grid-heading { margin: 0; color: var(--fctr-finds-text); font-family: var(--heading-font-family, sans-serif); font-size: clamp(26px, 3vw, 38px); font-weight: var(--heading-font-weight, 700); line-height: 1.16; }
+  .fctr-finds__filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fctr-finds__filters button { min-width: 44px; min-height: 44px; margin: 0; padding: 8px 14px; border: 1px solid #d9ddd4; border-radius: 0; color: var(--fctr-finds-text); background: var(--fctr-finds-surface); font: inherit; font-size: 12px; line-height: 1.5; cursor: pointer; }
+  .fctr-finds__filters button[aria-pressed='true'] { border-color: var(--fctr-finds-dark); color: #fff; background: var(--fctr-finds-dark); }
+  .fctr-finds__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 18px; }
+  .fctr-finds__card { min-width: 0; }
+  .fctr-finds__product-link { display: block; }
+  .fctr-finds__image-wrap { position: relative; aspect-ratio: 1 / 1.04; overflow: hidden; background: var(--fctr-finds-image); }
+  .fctr-finds__product-image { width: 100%; height: 100%; object-fit: contain; }
+  .fctr-finds__price { position: absolute; bottom: 12px; left: 12px; max-width: calc(100% - 24px); padding: 9px 13px; color: var(--fctr-finds-dark); background: var(--fctr-finds-accent); font-family: var(--heading-font-family, sans-serif); font-size: 28px; font-weight: var(--heading-font-weight, 700); line-height: 1.05; }
+  .fctr-finds__product-info { padding-top: 12px; }
+  .fctr-finds__audience { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  .fctr-finds__product-title { margin: 6px 0 8px; color: var(--fctr-finds-text); font-family: var(--text-font-family, sans-serif); font-size: 14px; font-weight: 600; line-height: 1.3; letter-spacing: normal; text-transform: none; }
+  .fctr-finds__product-cta { font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+  .fctr-finds__disclaimer { margin: 22px 0 0; font-size: 12px; line-height: 1.6; }
+  .fctr-finds__placeholder { display: block; width: 100%; height: 100%; min-height: 180px; }
+  .fctr-finds__empty-card { min-width: 0; padding: 15px; color: var(--fctr-finds-text); background: var(--fctr-finds-image); font-size: 13px; }
+  .fctr-finds__status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (max-width: 760px) {
+    .fctr-finds__hero { grid-template-columns: 1fr; }
+    .fctr-finds__copy { padding: 34px 7% 28px; }
+    .fctr-finds__heading { max-width: 460px; font-size: 60px; }
+    .fctr-finds__description { max-width: 420px; }
+    .fctr-finds__hero-products { height: 300px; padding: 0 7% 26px; }
+    .fctr-finds__hero-image { max-height: none; }
+    .fctr-finds__categories a { min-height: 52px; gap: 8px; padding: 14px 10px; font-size: 11px; }
+    .fctr-finds__featured { padding: 28px 5%; }
+    .fctr-finds__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
+    .fctr-finds__grid-heading { font-size: 28px; }
+    .fctr-finds__product-title { font-size: 13px; }
+    .fctr-finds__hero-price { font-size: 34px; }
+    .fctr-finds__hero-label { font-size: 9px; }
+  }
+  @media (max-width: 380px) {
+    .fctr-finds__heading { font-size: 48px; }
+    .fctr-finds__hero-products { height: 260px; }
+    .fctr-finds__hero-label { top: 8px; left: 8px; max-width: calc(100% - 16px); padding: 4px 5px; }
+    .fctr-finds__hero-price { bottom: 10px; left: 10px; font-size: 28px; }
+  }
+{% endstylesheet %}
+{% javascript %}
+  if (!customElements.get('fctr-shop-finds')) {
+    customElements.define('fctr-shop-finds', class extends HTMLElement {
+      connectedCallback() {
+        this.controller?.abort();
+        this.controller = new AbortController();
+        const cards = Array.from(this.querySelectorAll('[data-fctr-product]'));
+        const buttons = Array.from(this.querySelectorAll('[data-fctr-filter]'));
+        const filters = this.querySelector('.fctr-finds__filters');
+        if (!filters || !cards.length) return;
+        filters.hidden = false;
+        buttons.forEach(button => {
+          const category = button.dataset.fctrFilter;
+          button.hidden = category !== 'all' && !cards.some(card => card.dataset.audience === category || card.dataset.audience === 'all');
+          button.addEventListener('click', () => {
+            let count = 0;
+            buttons.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+            cards.forEach(card => {
+              card.hidden = category !== 'all' && card.dataset.audience !== category && card.dataset.audience !== 'all';
+              if (!card.hidden) count += 1;
+            });
+            const status = this.querySelector('[data-fctr-status]');
+            if (status) status.textContent = this.dataset.resultsLabel.replace('__COUNT__', String(count));
+          }, { signal: this.controller.signal });
+        });
+      }
+      disconnectedCallback() {
+        this.controller?.abort();
+      }
+    });
+  }
+{% endjavascript %}
+{% schema %}
+{
+  "name": "FCTR Shop the Finds",
+  "tag": "section",
+  "class": "fctr-shop-finds-section",
+  "enabled_on": { "templates": ["index"] },
+  "max_blocks": 12,
+  "settings": [
+    { "type": "header", "content": "Announcement" },
+    { "type": "checkbox", "id": "show_announcement", "label": "Show announcement", "default": true },
+    { "type": "text", "id": "announcement", "label": "Announcement", "default": "CURRENT FINDS. EVERYDAY PERFORMANCE. AVAILABLE SIZES VARY." },
+    { "type": "header", "content": "Hero" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "MAKE EVERY REP COUNT." },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "BIG GEAR.\nSMALL\nPRICES." },
+    { "type": "select", "id": "heading_tag", "label": "Heading level", "options": [{ "value": "h1", "label": "H1" }, { "value": "h2", "label": "H2" }], "default": "h1" },
+    { "type": "richtext", "id": "description", "label": "Description", "default": "<p>Performance tees, warm-up layers and everyday favorites. Gear up for your next move.</p>" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "SHOP THE FINDS" },
+    { "type": "url", "id": "button_link", "label": "Button link", "info": "Leave blank to scroll to this section's featured products." },
+    { "type": "product", "id": "hero_product_1", "label": "First hero product" },
+    { "type": "text", "id": "hero_label_1", "label": "First hero label", "default": "PERFORMANCE TEES" },
+    { "type": "image_picker", "id": "hero_image_1", "label": "First hero image override" },
+    { "type": "product", "id": "hero_product_2", "label": "Second hero product" },
+    { "type": "text", "id": "hero_label_2", "label": "Second hero label", "default": "FLEECE FAVORITES" },
+    { "type": "image_picker", "id": "hero_image_2", "label": "Second hero image override" },
+    { "type": "header", "content": "Shopping paths" },
+    { "type": "checkbox", "id": "show_categories", "label": "Show shopping paths", "default": true },
+    { "type": "text", "id": "men_label", "label": "Men's label", "default": "Shop Men" },
+    { "type": "url", "id": "men_link", "label": "Men's link" },
+    { "type": "text", "id": "women_label", "label": "Women's label", "default": "Shop Women" },
+    { "type": "url", "id": "women_link", "label": "Women's link" },
+    { "type": "text", "id": "youth_label", "label": "Youth label", "default": "Shop Youth" },
+    { "type": "url", "id": "youth_link", "label": "Youth link" },
+    { "type": "header", "content": "Featured products" },
+    { "type": "checkbox", "id": "show_products", "label": "Show featured products", "default": true },
+    { "type": "text", "id": "grid_eyebrow", "label": "Product eyebrow", "default": "YOUR NEXT ROTATION STARTS HERE." },
+    { "type": "text", "id": "grid_heading", "label": "Product heading", "default": "Find your fit." },
+    { "type": "checkbox", "id": "show_filters", "label": "Show audience filters", "default": true },
+    { "type": "checkbox", "id": "stock_only", "label": "Require positive inventory", "default": true, "info": "Uniforms and Fulfill Engine products are excluded. Prices follow the lowest available eligible variant." },
+    { "type": "text", "id": "disclaimer", "label": "Fine print", "default": "Select styles, colors and sizes. Prices as marked. Shipping calculated at checkout." },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#cfdf42" },
+    { "type": "color", "id": "dark_background", "label": "Hero background", "default": "#17191b" },
+    { "type": "color", "id": "surface", "label": "Product area background", "default": "#ffffff" },
+    { "type": "color", "id": "text_color", "label": "Product text", "default": "#17191b" },
+    { "type": "color", "id": "image_background", "label": "Image background", "default": "#f0f0ed" }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Featured product",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "select", "id": "audience", "label": "Audience", "options": [{ "value": "men", "label": "Men" }, { "value": "women", "label": "Women" }, { "value": "youth", "label": "Youth" }, { "value": "all", "label": "All audiences" }], "default": "all" },
+        { "type": "text", "id": "title", "label": "Display title override" },
+        { "type": "image_picker", "id": "image", "label": "Image override" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "FCTR Shop the Finds",
+      "blocks": [{ "type": "product" }, { "type": "product" }, { "type": "product" }, { "type": "product" }, { "type": "product" }, { "type": "product" }]
+    }
+  ]
+}
+{% endschema %}

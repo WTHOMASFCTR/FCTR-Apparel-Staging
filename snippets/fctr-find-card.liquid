@@ -1,0 +1,95 @@
+{% doc %}
+  Renders a stocked retail product for the FCTR Shop the Finds section.
+  @param {product} product - Selected product
+  @param {string} mode - hero or grid
+  @param {boolean} stock_only - Require positive tracked stock
+  @param {boolean} [above_fold] - Load visible hero imagery eagerly
+  @param {boolean} [priority] - Prioritize the first hero image
+  @param {string} [audience] - men, women, youth, or all
+  @param {string} [label] - Merchant-provided hero label
+  @param {string} [title_override] - Merchant-provided product title
+  @param {image} [image_override] - Merchant-provided product image
+  @param {string} [editor_attributes] - Theme editor block attributes
+{% enddoc %}
+{% liquid
+  assign eligible = true
+  assign display_variant = product.selected_or_first_available_variant
+  if product == blank or product.available == false
+    assign eligible = false
+  endif
+  for product_tag in product.tags
+    assign normalized_tag = product_tag | downcase
+    if normalized_tag contains 'uniform' or normalized_tag == 'fulfill engine product'
+      assign eligible = false
+    endif
+  endfor
+  if stock_only
+    assign display_variant = nil
+    assign sorted_variants = product.variants | sort: 'price'
+    for candidate in sorted_variants
+      assign sku_prefix = candidate.sku | slice: 0, 3 | upcase
+      if candidate.available and candidate.inventory_quantity > 0 and sku_prefix != 'FE_'
+        assign display_variant = candidate
+        break
+      endif
+    endfor
+  endif
+  if display_variant == blank
+    assign eligible = false
+  endif
+  assign card_image = image_override | default: product.featured_image
+  assign image_alt = card_image.alt | default: product.title
+  assign card_title = title_override | default: product.title
+  assign card_audience = audience | default: 'all'
+  assign audience_key = 'fctr.showcase.' | append: card_audience
+  assign image_loading = 'lazy'
+  assign image_priority = 'auto'
+  if mode == 'hero' and above_fold
+    assign image_loading = 'eager'
+  endif
+  if priority
+    assign image_priority = 'high'
+  endif
+%}
+{% if eligible %}
+  {% if mode == 'hero' %}
+    <a class="fctr-finds__hero-card" href="{{ product.url }}" aria-label="{{ card_title | escape }}">
+      {% if card_image != blank %}
+        {{ card_image | image_url: width: 1000 | image_tag: widths: '240,360,480,640,800,1000', sizes: '(max-width: 760px) 44vw, (max-width: 1440px) 28vw, 400px', loading: image_loading, fetchpriority: image_priority, class: 'fctr-finds__hero-image', alt: image_alt }}
+      {% else %}
+        {{ 'product-1' | placeholder_svg_tag: 'fctr-finds__placeholder' }}
+      {% endif %}
+      {% if label != blank %}<span class="fctr-finds__hero-label">{{ label | escape }}</span>{% endif %}
+      <span class="fctr-finds__hero-price">
+        {% if product.price_varies %}<span class="fctr-finds__from">{{ 'fctr.showcase.from' | t }}</span>{% endif %}
+        {{ display_variant.price | money_without_trailing_zeros }}
+      </span>
+    </a>
+  {% else %}
+    <article class="fctr-finds__card" data-fctr-product data-audience="{{ card_audience | escape }}" {{ editor_attributes }}>
+      <a class="fctr-finds__product-link" href="{{ product.url }}">
+        <div class="fctr-finds__image-wrap">
+          {% if card_image != blank %}
+            {{ card_image | image_url: width: 900 | image_tag: widths: '240,360,480,640,900', sizes: '(max-width: 760px) 44vw, (max-width: 1440px) 30vw, 430px', loading: 'lazy', class: 'fctr-finds__product-image', alt: image_alt }}
+          {% else %}
+            {{ 'product-1' | placeholder_svg_tag: 'fctr-finds__placeholder' }}
+          {% endif %}
+          <span class="fctr-finds__price">
+            {% if product.price_varies %}<span class="fctr-finds__from">{{ 'fctr.showcase.from' | t }}</span>{% endif %}
+            {{ display_variant.price | money_without_trailing_zeros }}
+          </span>
+        </div>
+        <div class="fctr-finds__product-info">
+          <span class="fctr-finds__audience">{{ audience_key | t }}</span>
+          <h3 class="fctr-finds__product-title">{{ card_title | escape }}</h3>
+          <span class="fctr-finds__product-cta">{{ 'fctr.showcase.choose_size' | t }} <span aria-hidden="true">→</span></span>
+        </div>
+      </a>
+    </article>
+  {% endif %}
+{% elsif request.design_mode %}
+  <div class="fctr-finds__empty-card" {{ editor_attributes }}>
+    {{ 'product-1' | placeholder_svg_tag: 'fctr-finds__placeholder' }}
+    <p>{{ 'fctr.showcase.select_product' | t }}</p>
+  </div>
+{% endif %}

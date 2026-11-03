@@ -1,0 +1,300 @@
+{% doc %}
+  @prompt
+    Announcement bar with dynamic connections to icon (metafield image), text (metafield single line text), and a url (metafield url) with text. I want the ability to determine the text alignment. icon always is to the left of the text, and url to the right of the text. If there is no content pulling from any of the metafields, the announcement bar should not display
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% if block.settings.icon_metafield != blank or block.settings.text_metafield != blank or block.settings.url_metafield != blank %}
+  {% style %}
+    .ai-announcement-bar-{{ ai_gen_id }} {
+      background-color: {{ block.settings.background_color }};
+      padding: {{ block.settings.vertical_padding }}px {{ block.settings.horizontal_padding }}px;
+      width: 100%;
+    }
+
+    .ai-announcement-bar__container-{{ ai_gen_id }} {
+      display: flex;
+      align-items: center;
+      gap: {{ block.settings.spacing }}px;
+      max-width: {{ block.settings.max_width }}px;
+      margin: 0 auto;
+    }
+
+    .ai-announcement-bar__container-{{ ai_gen_id }}[data-alignment="flex-start"] {
+      justify-content: flex-start;
+    }
+
+    .ai-announcement-bar__container-{{ ai_gen_id }}[data-alignment="center"] {
+      justify-content: center;
+    }
+
+    .ai-announcement-bar__container-{{ ai_gen_id }}[data-alignment="flex-end"] {
+      justify-content: flex-end;
+    }
+
+    .ai-announcement-bar__icon-{{ ai_gen_id }} {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .ai-announcement-bar__icon-{{ ai_gen_id }} img {
+      width: {{ block.settings.icon_size }}px;
+      height: {{ block.settings.icon_size }}px;
+      object-fit: contain;
+    }
+
+    .ai-announcement-bar__text-{{ ai_gen_id }} {
+      color: {{ block.settings.text_color }};
+      font-size: {{ block.settings.text_size }}px;
+      font-family: {{ settings.text_font.family }}, {{ settings.text_font.fallback_families }};
+      font-weight: {{ settings.text_font.weight }};
+      font-style: {{ settings.text_font.style }};
+    }
+
+    .ai-announcement-bar__link-{{ ai_gen_id }} {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: {{ block.settings.link_color }};
+      text-decoration: none;
+      font-size: {{ block.settings.link_text_size }}px;
+      font-family: {{ settings.text_font.family }}, {{ settings.text_font.fallback_families }};
+      font-weight: {{ settings.text_font.weight }};
+      font-style: {{ settings.text_font.style }};
+      transition: opacity 0.2s ease;
+    }
+
+    .ai-announcement-bar__link-{{ ai_gen_id }}:hover {
+      opacity: 0.7;
+    }
+
+    .ai-announcement-bar__link-arrow-{{ ai_gen_id }} {
+      width: 16px;
+      height: 16px;
+      stroke: {{ block.settings.link_color }};
+    }
+
+    @media screen and (max-width: 749px) {
+      .ai-announcement-bar__container-{{ ai_gen_id }} {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .ai-announcement-bar__text-{{ ai_gen_id }} {
+        width: 100%;
+      }
+    }
+  {% endstyle %}
+
+  <div class="ai-announcement-bar-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+    <div class="ai-announcement-bar__container-{{ ai_gen_id }}" data-alignment="{{ block.settings.text_alignment }}">
+      {% if block.settings.icon_metafield != blank %}
+        <div class="ai-announcement-bar__icon-{{ ai_gen_id }}">
+          <img
+            src="{{ block.settings.icon_metafield | image_url: width: 100 }}"
+            alt=""
+            loading="lazy"
+            width="100"
+            height="100"
+          >
+        </div>
+      {% endif %}
+
+      {% if block.settings.text_metafield != blank %}
+        <div class="ai-announcement-bar__text-{{ ai_gen_id }}">
+          {{ block.settings.text_metafield }}
+        </div>
+      {% endif %}
+
+      {% if block.settings.url_metafield != blank %}
+        <a
+          href="{{ block.settings.url_metafield }}"
+          class="ai-announcement-bar__link-{{ ai_gen_id }}"
+        >
+          {{ block.settings.link_text }}
+          <svg
+            class="ai-announcement-bar__link-arrow-{{ ai_gen_id }}"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "icon_metafield",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "text_metafield",
+      "label": "Text"
+    },
+    {
+      "type": "url",
+      "id": "url_metafield",
+      "label": "Link URL"
+    },
+    {
+      "type": "text",
+      "id": "link_text",
+      "label": "Link text",
+      "default": "Learn more"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "min": 600,
+      "max": 1400,
+      "step": 100,
+      "unit": "px",
+      "label": "Maximum width",
+      "default": 1200
+    },
+    {
+      "type": "range",
+      "id": "spacing",
+      "min": 8,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Spacing between elements",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "min": 4,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Vertical padding",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "label": "Horizontal padding",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Icon"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "min": 16,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "label": "Icon size",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Text"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Link"
+    },
+    {
+      "type": "range",
+      "id": "link_text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Link text size",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "label": "Link color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#405de6"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement bar"
+    }
+  ]
+}
+{% endschema %}

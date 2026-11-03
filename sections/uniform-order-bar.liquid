@@ -1,0 +1,287 @@
+{%- comment -%}
+  Uniform Order Bar (Section)
+  - Everything centered as a single group: logo + text + button
+  - Background can be an image OR a color (supports dynamic metafields)
+  - Displays if ANY connected content exists (logo/text/button/background)
+  - Hides if truly empty (but still shows in Theme Editor design mode)
+{%- endcomment -%}
+
+{%- assign uob_id = section.id | replace: '_', '' | downcase -%}
+
+{%- liquid
+  assign logo_image      = section.settings.logo_image
+  assign bar_text        = section.settings.bar_text
+  assign button_url      = section.settings.button_url
+  assign button_text     = section.settings.button_text
+
+  assign background_image = section.settings.background_image
+  assign background_color = section.settings.background_color
+
+  comment
+    Normalize dynamic sources (metafields) that may come through as objects.
+    - For files/images metafields, the picker sometimes returns an object with .value
+    - For color metafields, it can also be an object with .value
+  endcomment
+  if background_image != blank and background_image.value != blank
+    assign background_image = background_image.value
+  endif
+  if background_color != blank and background_color.value != blank
+    assign background_color = background_color.value
+  endif
+
+  assign has_button = false
+  if button_url != blank and button_text != blank
+    assign has_button = true
+  endif
+
+  assign has_content = false
+  if logo_image != blank or bar_text != blank or has_button or background_image != blank or background_color != blank
+    assign has_content = true
+  endif
+-%}
+
+{%- if has_content or request.design_mode -%}
+  {%- style -%}
+    #uob-{{ uob_id }} {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      {%- if background_image != blank -%}
+        background-image: url({{ background_image | image_url: width: 2400 }});
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      {%- else -%}
+        background-color: {{ background_color | default: section.settings.fallback_background_color }};
+      {%- endif -%}
+      color: {{ section.settings.text_color }};
+    }
+
+    #uob-{{ uob_id }} .uob__inner {
+      padding: {{ section.settings.padding_y | default: 14 }}px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #uob-{{ uob_id }} .uob__group {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      text-align: center;
+    }
+
+    #uob-{{ uob_id }} .uob__logo img {
+      display: block;
+      height: {{ section.settings.logo_height | default: 36 }}px;
+      width: auto;
+    }
+
+    #uob-{{ uob_id }} .uob__text {
+      font-size: {{ section.settings.font_size | default: 14 }}px;
+      line-height: 1.25;
+      font-weight: {{ section.settings.font_weight | default: 600 }};
+    }
+
+    #uob-{{ uob_id }} .uob__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13px;
+      background: {{ section.settings.button_background }};
+      color: {{ section.settings.button_text_color }};
+      border: 1px solid rgba(255,255,255,0.25);
+      transition: opacity .15s ease;
+      white-space: nowrap;
+    }
+
+    #uob-{{ uob_id }} .uob__btn:hover { opacity: .9; }
+
+    @media (max-width: 767px) {
+      #uob-{{ uob_id }} .uob__inner {
+        padding: {{ section.settings.padding_y_mobile | default: 12 }}px 16px;
+      }
+      #uob-{{ uob_id }} .uob__logo img {
+        height: {{ section.settings.logo_height_mobile | default: 28 }}px;
+      }
+    }
+  {%- endstyle -%}
+
+  <section id="uob-{{ uob_id }}" class="uob" role="region" aria-label="Uniform order bar">
+    <div class="uob__inner">
+      <div class="uob__group">
+        {%- if logo_image != blank -%}
+          <span class="uob__logo">
+            {{ logo_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: section.settings.logo_alt | default: 'Logo' }}
+          </span>
+        {%- endif -%}
+
+        {%- if bar_text != blank -%}
+          <span class="uob__text">{{ bar_text }}</span>
+        {%- endif -%}
+
+        {%- if has_button -%}
+          <a class="uob__btn" href="{{ button_url }}">
+            {{ button_text }}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Uniform order bar",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo_image",
+      "label": "Logo"
+    },
+    {
+      "type": "text",
+      "id": "logo_alt",
+      "label": "Logo alt text",
+      "default": "Logo"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "bar_text",
+      "label": "Text"
+    },
+
+    {
+      "type": "url",
+      "id": "button_url",
+      "label": "Button link"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Order uniforms"
+    },
+
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image (optional)"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color (used when no image selected)",
+      "default": "#111111"
+    },
+    {
+      "type": "color",
+      "id": "fallback_background_color",
+      "label": "Fallback background color",
+      "default": "#111111"
+    },
+
+    {
+      "type": "header",
+      "content": "Styles"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#111111"
+    },
+    {
+      "type": "range",
+      "id": "logo_height",
+      "label": "Logo height (desktop)",
+      "min": 16,
+      "max": 80,
+      "step": 1,
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "logo_height_mobile",
+      "label": "Logo height (mobile)",
+      "min": 16,
+      "max": 60,
+      "step": 1,
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 22,
+      "step": 1,
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "font_weight",
+      "label": "Font weight",
+      "min": 300,
+      "max": 900,
+      "step": 100,
+      "default": 600
+    },
+    {
+      "type": "range",
+      "id": "padding_y",
+      "label": "Padding Y (desktop)",
+      "min": 6,
+      "max": 40,
+      "step": 1,
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "padding_y_mobile",
+      "label": "Padding Y (mobile)",
+      "min": 6,
+      "max": 40,
+      "step": 1,
+      "default": 12
+    }
+  ],
+  "presets": [
+    {
+      "name": "Uniform order bar"
+    }
+  ]
+}
+{% endschema %}
+
+
+
+
+
+
+
+
+
+

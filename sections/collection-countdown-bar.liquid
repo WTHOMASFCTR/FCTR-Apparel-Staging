@@ -1,0 +1,448 @@
+{% liquid
+  assign countdown_end = collection.metafields.custom.custom_countdown_end_at.value
+
+  assign has_countdown = false
+  if countdown_end != blank
+    assign has_countdown = true
+  endif
+
+  assign show_section = false
+  if has_countdown or request.design_mode
+    assign show_section = true
+  endif
+
+  assign final_label = section.settings.heading
+  assign final_bg = section.settings.background
+  assign final_text = section.settings.text_color
+  assign final_accent = section.settings.accent_color
+  assign final_style = section.settings.style
+%}
+
+{% if show_section %}
+  <div
+    id="collection-countdown-{{ section.id }}"
+    class="collection-countdown collection-countdown--{{ final_style }} {% unless has_countdown %}collection-countdown--editor-empty{% endunless %}"
+    style="
+      --countdown-bg: {{ final_bg }};
+      --countdown-text: {{ final_text }};
+      --countdown-accent: {{ final_accent }};
+      --countdown-radius: {{ section.settings.corner_radius }}px;
+      --countdown-border-width: {{ section.settings.border_width }}px;
+      --countdown-padding-y: {{ section.settings.padding_y }}px;
+      --countdown-padding-x: {{ section.settings.padding_x }}px;
+      --countdown-gap: {{ section.settings.gap }}px;
+      --countdown-number-size: {{ section.settings.number_size }}px;
+      --countdown-label-size: {{ section.settings.label_size }}px;
+      --countdown-heading-size: {{ section.settings.heading_size }}px;
+      --countdown-spacing-top: {{ section.settings.margin_top }}px;
+      --countdown-spacing-bottom: {{ section.settings.margin_bottom }}px;
+    "
+    {% if has_countdown %}
+      data-countdown-end="{{ countdown_end | date: '%Y-%m-%dT%H:%M:%S%z' }}"
+    {% endif %}
+    data-expired-text="{{ section.settings.expired_text | escape }}"
+  >
+    <div class="{% if section.settings.full_width %}collection-countdown__full{% else %}page-width{% endif %}">
+      <div class="collection-countdown__inner">
+        <div class="collection-countdown__content">
+          {% if final_label != blank %}
+            <div class="collection-countdown__label">
+              {{ final_label }}
+            </div>
+          {% endif %}
+
+          <div class="collection-countdown__timer" aria-live="polite" aria-atomic="true">
+            <div class="collection-countdown__unit" data-unit="days">
+              <span class="collection-countdown__number">00</span>
+              <span class="collection-countdown__unit-label">Days</span>
+            </div>
+            <div class="collection-countdown__unit" data-unit="hours">
+              <span class="collection-countdown__number">00</span>
+              <span class="collection-countdown__unit-label">Hours</span>
+            </div>
+            <div class="collection-countdown__unit" data-unit="minutes">
+              <span class="collection-countdown__number">00</span>
+              <span class="collection-countdown__unit-label">Minutes</span>
+            </div>
+            <div class="collection-countdown__unit" data-unit="seconds">
+              <span class="collection-countdown__number">00</span>
+              <span class="collection-countdown__unit-label">Seconds</span>
+            </div>
+          </div>
+
+          <div class="collection-countdown__expired-message" hidden>
+            {{ section.settings.expired_text }}
+          </div>
+
+          {% if request.design_mode and has_countdown == false %}
+            <div class="collection-countdown__editor-note">
+              Add a value to the collection metafield <strong>custom.custom_countdown_end_at</strong> to activate this countdown on the storefront.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    #collection-countdown-{{ section.id }} {
+      margin-top: var(--countdown-spacing-top);
+      margin-bottom: var(--countdown-spacing-bottom);
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__full {
+      width: 100%;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__inner {
+      background: var(--countdown-bg);
+      color: var(--countdown-text);
+      border-radius: var(--countdown-radius);
+      padding: var(--countdown-padding-y) var(--countdown-padding-x);
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+      border: var(--countdown-border-width) solid transparent;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        text-align: center;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__label {
+        font-size: var(--countdown-heading-size);
+        line-height: 1.2;
+        font-weight: 600;
+        letter-spacing: 0;
+        font-family: inherit;
+        text-align: center;
+        flex: unset;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__timer {
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-end;
+      gap: var(--countdown-gap);
+      flex: 0 1 auto;
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__unit {
+      min-width: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px 12px;
+      border-radius: calc(var(--countdown-radius) * 0.65);
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__number {
+      display: block;
+      font-size: var(--countdown-number-size);
+      line-height: 1;
+      font-weight: 700;
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__unit-label {
+      display: block;
+      margin-top: 6px;
+      font-size: var(--countdown-label-size);
+      line-height: 1.2;
+      opacity: 0.85;
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__expired-message {
+      font-size: var(--countdown-heading-size);
+      font-weight: 600;
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }} .collection-countdown__editor-note {
+      width: 100%;
+      font-size: 12px;
+      line-height: 1.4;
+      opacity: 0.8;
+      margin-top: 8px;
+      font-family: inherit;
+    }
+
+    #collection-countdown-{{ section.id }}.collection-countdown--solid .collection-countdown__unit {
+      background: color-mix(in srgb, var(--countdown-accent) 16%, transparent);
+      border: 1px solid color-mix(in srgb, var(--countdown-accent) 30%, transparent);
+    }
+
+    #collection-countdown-{{ section.id }}.collection-countdown--outline .collection-countdown__inner {
+      background: transparent;
+      border-color: var(--countdown-accent);
+    }
+
+    #collection-countdown-{{ section.id }}.collection-countdown--outline .collection-countdown__unit {
+      border: 1px solid var(--countdown-accent);
+      background: transparent;
+    }
+
+    #collection-countdown-{{ section.id }}.collection-countdown--glass .collection-countdown__inner {
+      background: color-mix(in srgb, var(--countdown-bg) 82%, transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-color: color-mix(in srgb, var(--countdown-accent) 25%, transparent);
+    }
+
+    #collection-countdown-{{ section.id }}.collection-countdown--glass .collection-countdown__unit {
+      background: color-mix(in srgb, white 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--countdown-accent) 20%, transparent);
+    }
+
+    #collection-countdown-{{ section.id }}.collection-countdown--editor-empty .collection-countdown__inner {
+      opacity: 0.75;
+      border: 1px dashed color-mix(in srgb, var(--countdown-text) 30%, transparent);
+    }
+
+    @media screen and (max-width: 749px) {
+      #collection-countdown-{{ section.id }} .collection-countdown__content {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      #collection-countdown-{{ section.id }} .collection-countdown__label {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+
+      #collection-countdown-{{ section.id }} .collection-countdown__timer {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      #collection-countdown-{{ section.id }} .collection-countdown__unit {
+        min-width: 64px;
+        flex: 1 1 calc(25% - var(--countdown-gap));
+      }
+    }
+  </style>
+
+  <script>
+    (function() {
+      var root = document.getElementById('collection-countdown-{{ section.id }}');
+      if (!root) return;
+
+      var endValue = root.getAttribute('data-countdown-end');
+      if (!endValue) return;
+
+      var expiredText = root.getAttribute('data-expired-text') || 'This offer has ended.';
+      var timer = root.querySelector('.collection-countdown__timer');
+      var expiredMessage = root.querySelector('.collection-countdown__expired-message');
+
+      var daysEl = root.querySelector('[data-unit="days"] .collection-countdown__number');
+      var hoursEl = root.querySelector('[data-unit="hours"] .collection-countdown__number');
+      var minutesEl = root.querySelector('[data-unit="minutes"] .collection-countdown__number');
+      var secondsEl = root.querySelector('[data-unit="seconds"] .collection-countdown__number');
+
+      function pad(num) {
+        return String(num).padStart(2, '0');
+      }
+
+      function updateCountdown() {
+        var endDate = new Date(endValue).getTime();
+        var now = new Date().getTime();
+        var distance = endDate - now;
+
+        if (isNaN(endDate) || distance <= 0) {
+          if (timer) timer.hidden = true;
+          if (expiredMessage) {
+            expiredMessage.hidden = false;
+            expiredMessage.textContent = expiredText;
+          }
+          return;
+        }
+
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+        var minutes = Math.floor((distance / (1000 * 60)) % 60);
+        var seconds = Math.floor((distance / 1000) % 60);
+
+        if (daysEl) daysEl.textContent = pad(days);
+        if (hoursEl) hoursEl.textContent = pad(hours);
+        if (minutesEl) minutesEl.textContent = pad(minutes);
+        if (secondsEl) secondsEl.textContent = pad(seconds);
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Collection countdown bar",
+  "templates": ["collection"],
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full width",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Hurry — sale ends soon"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Style",
+      "default": "solid",
+      "options": [
+        { "value": "solid", "label": "Solid" },
+        { "value": "outline", "label": "Outline" },
+        { "value": "glass", "label": "Glass" }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "Background",
+      "default": "#111111"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "text",
+      "id": "expired_text",
+      "label": "Expired text",
+      "default": "This promotion has ended."
+    },
+    {
+      "type": "range",
+      "id": "corner_radius",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Corner radius",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "label": "Border width",
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "padding_y",
+      "min": 8,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Vertical padding",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "padding_x",
+      "min": 12,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "label": "Horizontal padding",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "min": 4,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Unit gap",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 14,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "number_size",
+      "min": 16,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Number size",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "label_size",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Unit label size",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Top spacing",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Bottom spacing",
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection countdown bar"
+    }
+  ]
+}
+{% endschema %}

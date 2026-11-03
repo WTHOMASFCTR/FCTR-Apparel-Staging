@@ -1,0 +1,146 @@
+{% assign products_list = product.metafields.shopify--discovery--product_recommendation.complementary_products.value %}
+{% assign section_title = product.metafields.custom.drop_collection_title.value %}
+
+{% if products_list != blank %}
+
+<section class="section">
+  <div class="container">
+
+    {% if section_title != blank %}
+      <h2 class="heading h2">{{ section_title }}</h2>
+    {% elsif section.settings.heading != blank %}
+      <h2 class="heading h2">{{ section.settings.heading }}</h2>
+    {% endif %}
+
+    <div class="metafield-products-grid">
+      {% for item in products_list limit: section.settings.products_to_show %}
+        <div class="metafield-product-card">
+          <a href="{{ item.url }}" class="metafield-product-card__link">
+            <div class="metafield-product-card__image-wrapper">
+              {% if item.featured_image %}
+                {{
+                  item.featured_image
+                  | image_url: width: 900
+                  | image_tag: loading: 'lazy', class: 'metafield-product-card__image'
+                }}
+              {% endif %}
+            </div>
+
+            <div class="metafield-product-card__content">
+              <p class="product-item__title">{{ item.title }}</p>
+              <p class="price">{{ item.price | money }}</p>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .metafield-products-grid {
+    display: grid;
+    grid-template-columns: repeat({{ section.settings.columns_desktop }}, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+    align-items: start;
+  }
+
+  .metafield-product-card {
+    min-width: 0;
+  }
+
+  .metafield-product-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .metafield-product-card__image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1.2;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .metafield-product-card__image-wrapper img,
+  .metafield-product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .metafield-product-card__content {
+    padding-top: 14px;
+  }
+
+  .metafield-product-card__content .product-item__title {
+    margin: 0 0 8px;
+  }
+
+  .metafield-product-card__content .price {
+    margin: 0;
+  }
+
+  @media screen and (max-width: 768px) {
+    .metafield-products-grid {
+      grid-template-columns: repeat({{ section.settings.columns_mobile }}, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+</style>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "Metafield products",
+  "templates": ["product"],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Fallback heading",
+      "default": "Complete the Look"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 1,
+      "max": 8,
+      "step": 1,
+      "label": "Products to show",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "label": "Desktop columns",
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Mobile columns",
+      "default": "2",
+      "options": [
+        { "value": "1", "label": "1 column" },
+        { "value": "2", "label": "2 columns" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Metafield products"
+    }
+  ]
+}
+{% endschema %}

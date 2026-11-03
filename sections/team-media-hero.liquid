@@ -1,0 +1,525 @@
+{%- if section.settings.background_type == 'boxed' -%}
+  {%- assign is_boxed = true -%}
+{%- else -%}
+  {%- assign is_boxed = false -%}
+{%- endif -%}
+
+{%- liquid
+  assign media_image = section.settings.image
+  assign media_mobile_image = section.settings.mobile_image
+  assign media_video = section.settings.video
+
+  assign has_image = false
+  assign has_mobile_image = false
+  assign has_video = false
+
+  if media_image != blank
+    assign has_image = true
+  endif
+
+  if media_mobile_image != blank
+    assign has_mobile_image = true
+  endif
+
+  if media_video != blank and media_video.sources.size > 0
+    assign has_video = true
+  endif
+
+  assign render_media = false
+  if has_video or has_image or has_mobile_image
+    assign render_media = true
+  endif
+
+  assign text_position_parts = section.settings.text_position | split: '_'
+  assign text_vertical = text_position_parts | first
+  assign text_alignment = text_position_parts | last
+
+  case text_vertical
+    when 'top'
+      assign section_items_alignment = 'flex-start'
+    when 'middle'
+      assign section_items_alignment = 'center'
+    when 'bottom'
+      assign section_items_alignment = 'flex-end'
+  endcase
+-%}
+
+{%- if render_media -%}
+  <style>
+    #shopify-section-{{ section.id }} {
+      {%- if section.settings.text_color == 'rgba(0,0,0,0)' -%}
+        {%- assign heading_color = settings.heading_color -%}
+        {%- assign text_color = settings.text_color -%}
+      {%- else -%}
+        {%- assign heading_color = section.settings.text_color -%}
+        {%- assign text_color = section.settings.text_color -%}
+      {%- endif -%}
+
+      {%- if section.settings.button_background == 'rgba(0,0,0,0)' -%}
+        {%- assign button_background = settings.primary_button_background -%}
+      {%- else -%}
+        {%- assign button_background = section.settings.button_background -%}
+      {%- endif -%}
+
+      {%- if section.settings.button_text_color == 'rgba(0,0,0,0)' -%}
+        {%- assign button_text_color = settings.primary_button_text_color -%}
+      {%- else -%}
+        {%- assign button_text_color = section.settings.button_text_color -%}
+      {%- endif -%}
+
+      --heading-color: {{ heading_color.red }}, {{ heading_color.green }}, {{ heading_color.blue }};
+      --text-color: {{ text_color.red }}, {{ text_color.green }}, {{ text_color.blue }};
+      --primary-button-background: {{ button_background.red }}, {{ button_background.green }}, {{ button_background.blue }};
+      --primary-button-text-color: {{ button_text_color.red }}, {{ button_text_color.green }}, {{ button_text_color.blue }};
+      --section-items-alignment: {{ section_items_alignment }};
+      --section-overlay-color: {{ section.settings.overlay_color.red }}, {{ section.settings.overlay_color.green }}, {{ section.settings.overlay_color.blue }};
+      --section-overlay-opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+    }
+
+    #shopify-section-{{ section.id }} .team-media-hero--clickable {
+      cursor: pointer;
+    }
+
+    #shopify-section-{{ section.id }} .team-media-hero__video-wrapper {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #shopify-section-{{ section.id }} .team-media-hero__video-wrapper video,
+    #shopify-section-{{ section.id }} .team-media-hero__video-wrapper .image-overlay__image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #shopify-section-{{ section.id }} .image-overlay__text-container {
+      margin-block-start: 24px;
+    }
+
+    #shopify-section-{{ section.id }} .image-overlay__text-container .button-wrapper:only-child {
+      margin-block-start: 32px;
+    }
+
+    {%- if section.settings.custom_height != blank and section.settings.section_height != 'auto' -%}
+      #shopify-section-{{ section.id }} .image-overlay {
+        min-height: {{ section.settings.custom_height }};
+      }
+    {%- endif -%}
+
+    @media screen and (max-width: 740px) {
+      {%- if section.settings.mobile_custom_height != blank and section.settings.section_height != 'auto' -%}
+        #shopify-section-{{ section.id }} .image-overlay {
+          min-height: {{ section.settings.mobile_custom_height }};
+        }
+      {%- endif -%}
+
+      {%- if has_mobile_image and section.settings.section_height == 'auto' -%}
+        #shopify-section-{{ section.id }} .image-overlay__image-wrapper {
+          padding-bottom: {{ 100.0 | divided_by: media_mobile_image.aspect_ratio }}% !important;
+        }
+      {%- endif -%}
+    }
+
+    {{ section.settings.custom_css }}
+  </style>
+
+  <section class="section {% unless is_boxed %}section--flush{% endunless %}">
+    <div {% if is_boxed %}class="container"{% endif %}>
+      {%- assign image_aspect_ratio = media_image.aspect_ratio | default: media_mobile_image.aspect_ratio | default: 2.63 -%}
+
+      <image-with-text-overlay
+        {% if section.settings.reveal_on_scroll %}reveal-on-scroll{% endif %}
+        class="image-overlay image-overlay--{{ section.settings.section_height }} {% if section.settings.media_link != blank %}team-media-hero--clickable{% endif %}"
+        {% if section.settings.section_height == 'auto' %}style="--image-aspect-ratio: {{ image_aspect_ratio }}"{% endif %}
+        {% if section.settings.media_link != blank %}
+          data-team-media-link="{{ section.settings.media_link }}"
+          role="link"
+          tabindex="0"
+          aria-label="{{ section.settings.heading | default: section.settings.subheading | default: 'View more' | escape }}"
+        {% endif %}
+      >
+        <div
+          class="image-overlay__image-wrapper"
+          {% if section.settings.section_height == 'auto' %}style="padding-bottom: {{ 100.0 | divided_by: image_aspect_ratio }}%"{% endif %}
+        >
+          {%- if has_video -%}
+            <div class="team-media-hero__video-wrapper">
+              {{
+                media_video
+                | video_tag:
+                  autoplay: section.settings.video_autoplay,
+                  loop: section.settings.video_loop,
+                  muted: section.settings.video_muted,
+                  controls: section.settings.show_video_controls,
+                  playsinline: true,
+                  image_size: '2000x',
+                  class: 'image-overlay__image'
+              }}
+            </div>
+          {%- elsif has_image or has_mobile_image -%}
+            {%- assign image_to_render = media_image -%}
+
+            {%- if image_to_render == blank -%}
+              {%- assign image_to_render = media_mobile_image -%}
+            {%- endif -%}
+
+            <picture>
+              {%- if has_mobile_image -%}
+                <source
+                  media="(max-width: 740px)"
+                  srcset="
+                    {{ media_mobile_image | image_url: width: 600 }} 600w,
+                    {{ media_mobile_image | image_url: width: 700 }} 700w,
+                    {{ media_mobile_image | image_url: width: 800 }} 800w,
+                    {{ media_mobile_image | image_url: width: 1000 }} 1000w,
+                    {{ media_mobile_image | image_url: width: 1200 }} 1200w,
+                    {{ media_mobile_image | image_url: width: 1400 }} 1400w,
+                    {{ media_mobile_image | image_url: width: 1600 }} 1600w
+                  "
+                  sizes="100vw"
+                >
+              {%- endif -%}
+
+              {%- if section.settings.reveal_on_scroll -%}
+                {{- image_to_render | image_url: width: image_to_render.width | image_tag: loading: 'lazy', widths: '600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000', reveal: true, class: 'image-overlay__image' -}}
+              {%- else -%}
+                {{- image_to_render | image_url: width: image_to_render.width | image_tag: loading: 'lazy', widths: '600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000', class: 'image-overlay__image' -}}
+              {%- endif -%}
+            </picture>
+          {%- endif -%}
+        </div>
+
+        {%- capture section_content -%}
+          <div class="image-overlay__content-wrapper">
+            <div class="image-overlay__content content-box content-box--{{ section.settings.text_width }} content-box--text-{{ text_alignment }} content-box--{{ text_alignment }} text-container">
+              {%- if section.settings.subheading != blank -%}
+                <h2 class="heading heading--small">
+                  {{ section.settings.subheading | escape }}
+                </h2>
+              {%- endif -%}
+
+              {%- if section.settings.heading != blank -%}
+                <h3 class="heading h2">
+                  {{ section.settings.heading | escape }}
+                </h3>
+              {%- endif -%}
+
+              {%- if section.settings.content != blank or section.settings.button_text != blank -%}
+                <div class="image-overlay__text-container">
+                  {%- if section.settings.content != blank -%}
+                    {{- section.settings.content -}}
+                  {%- endif -%}
+
+                  {%- if section.settings.button_text != blank and section.settings.button_link != blank -%}
+                    {%- if section.settings.link_style == 'link' -%}
+                      <a href="{{ section.settings.button_link }}" class="multi-column__link heading heading--small link">
+                        {{ section.settings.button_text | escape }}
+                      </a>
+                    {%- else -%}
+                      <div class="button-wrapper">
+                        <a href="{{ section.settings.button_link }}" class="button button--primary">
+                          {{ section.settings.button_text | escape }}
+                        </a>
+                      </div>
+                    {%- endif -%}
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+        {%- endcapture -%}
+
+        <div {% if is_boxed %}style="width: 100%"{% else %}class="container"{% endif %}>
+          {{- section_content -}}
+        </div>
+      </image-with-text-overlay>
+    </div>
+  </section>
+
+  {%- if section.settings.media_link != blank -%}
+    <script>
+      (() => {
+        const section = document.getElementById('shopify-section-{{ section.id }}');
+
+        if (!section) {
+          return;
+        }
+
+        const hero = section.querySelector('[data-team-media-link]');
+
+        if (!hero) {
+          return;
+        }
+
+        const mediaLink = hero.getAttribute('data-team-media-link');
+
+        if (!mediaLink) {
+          return;
+        }
+
+        const goToMediaLink = (event) => {
+          const clickedInteractiveElement = event.target.closest('a, button, input, textarea, select, label, summary');
+
+          if (clickedInteractiveElement) {
+            return;
+          }
+
+          if (event.metaKey || event.ctrlKey) {
+            window.open(mediaLink, '_blank');
+            return;
+          }
+
+          window.location.href = mediaLink;
+        };
+
+        hero.addEventListener('click', goToMediaLink);
+
+        hero.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+          }
+
+          const focusedInteractiveElement = event.target.closest('a, button, input, textarea, select, label, summary');
+
+          if (focusedInteractiveElement) {
+            return;
+          }
+
+          event.preventDefault();
+          window.location.href = mediaLink;
+        });
+      })();
+    </script>
+  {%- endif -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Team media hero",
+  "class": "shopify-section--team-media-hero",
+  "disabled_on": {
+    "groups": ["header", "custom.overlay"]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "reveal_on_scroll",
+      "label": "Reveal on scroll",
+      "info": "Show animation when section becomes visible.",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_height",
+      "label": "Section height",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Original image ratio"
+        },
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "info": "Choose \"Original image ratio\" to not cut images.",
+      "default": "auto"
+    },
+    {
+      "type": "text",
+      "id": "custom_height",
+      "label": "Desktop custom height",
+      "info": "Example: 600px, 70vh"
+    },
+    {
+      "type": "text",
+      "id": "mobile_custom_height",
+      "label": "Mobile custom height",
+      "info": "Example: 420px, 60vh"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image",
+      "info": "2000 x 980px .jpg recommended"
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile image",
+      "info": "Optional. Displays on mobile screens. If blank, the main image is used."
+    },
+    {
+      "type": "url",
+      "id": "media_link",
+      "label": "Media image link"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_autoplay",
+      "label": "Autoplay video",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "video_loop",
+      "label": "Loop video",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "video_muted",
+      "label": "Mute video",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_video_controls",
+      "label": "Show video controls",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Subheading"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Image with text overlay"
+    },
+    {
+      "type": "richtext",
+      "id": "content",
+      "label": "Content",
+      "default": "<p>Use overlay text to give your customers insight into your brand.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "select",
+      "id": "link_style",
+      "label": "Link style",
+      "options": [
+        { "value": "link", "label": "Link" },
+        { "value": "button", "label": "Button" }
+      ],
+      "default": "link"
+    },
+    {
+      "type": "select",
+      "id": "background_type",
+      "label": "Background",
+      "options": [
+        { "value": "full_width", "label": "Full width" },
+        { "value": "boxed", "label": "Boxed" }
+      ],
+      "default": "full_width"
+    },
+    {
+      "type": "select",
+      "id": "text_width",
+      "label": "Text width",
+      "options": [
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" },
+        { "value": "fill", "label": "Fill screen" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "select",
+      "id": "text_position",
+      "label": "Text position",
+      "options": [
+        { "value": "top_left", "label": "Top left" },
+        { "value": "top_center", "label": "Top center" },
+        { "value": "top_right", "label": "Top right" },
+        { "value": "middle_left", "label": "Middle left" },
+        { "value": "middle_center", "label": "Middle center" },
+        { "value": "middle_right", "label": "Middle right" },
+        { "value": "bottom_left", "label": "Bottom left" },
+        { "value": "bottom_center", "label": "Bottom center" },
+        { "value": "bottom_right", "label": "Bottom right" }
+      ],
+      "default": "middle_center"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Overlay opacity",
+      "default": 30
+    },
+    {
+      "type": "liquid",
+      "id": "custom_css",
+      "label": "Custom CSS"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Team media hero"
+    }
+  ]
+}
+{% endschema %}

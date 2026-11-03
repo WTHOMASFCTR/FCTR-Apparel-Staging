@@ -1,0 +1,243 @@
+{%- comment -%}
+  Discount Bar (Section)
+  - Icon (image picker), text, and optional inline link (terms-style)
+  - Alignment control
+  - Hides if empty (but still shows in Theme Editor design mode)
+{%- endcomment -%}
+
+{%- assign ai_gen_id = section.id | replace: '_', '' | downcase -%}
+
+{%- liquid
+  assign icon_image = section.settings.icon_image
+  assign bar_text   = section.settings.bar_text
+  assign link_url   = section.settings.link_url
+  assign link_text  = section.settings.link_text
+
+  assign has_link = false
+  if link_url != blank and link_text != blank
+    assign has_link = true
+  endif
+
+  assign has_content = false
+  if icon_image != blank or bar_text != blank or has_link
+    assign has_content = true
+  endif
+-%}
+
+{%- if has_content -%}
+  {% style %}
+    #discount-bar-{{ ai_gen_id }} {
+      background-color: {{ section.settings.background_color }};
+      padding: {{ section.settings.vertical_padding }}px {{ section.settings.horizontal_padding }}px;
+      width: 100%;
+    }
+
+    #discount-bar-{{ ai_gen_id }} .discount-bar__inner {
+      max-width: {{ section.settings.max_width }}px;
+      margin: 0 auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: {{ section.settings.text_alignment }};
+      gap: {{ section.settings.spacing }}px;
+
+      min-width: 0;
+    }
+
+    #discount-bar-{{ ai_gen_id }} .discount-bar__icon {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    #discount-bar-{{ ai_gen_id }} .discount-bar__icon img {
+      width: {{ section.settings.icon_size }}px;
+      height: {{ section.settings.icon_size }}px;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Text becomes the single wrapping container; link lives inline */
+    #discount-bar-{{ ai_gen_id }} .discount-bar__text {
+      margin: 0;
+
+      color: {{ section.settings.text_color }};
+      font-size: {{ section.settings.text_size }}px;
+      font-family: {{ settings.text_font.family }}, {{ settings.text_font.fallback_families }};
+      font-weight: {{ settings.text_font.weight }};
+      font-style: {{ settings.text_font.style }};
+
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.3;
+
+      /* align the sentence similar to your example */
+      text-align: center;
+    }
+
+    #discount-bar-{{ ai_gen_id }} .discount-bar__terms {
+      margin-left: 10px;
+      color: {{ section.settings.link_color }};
+      text-decoration: underline;
+      white-space: nowrap;
+      display: inline;
+      transition: opacity 0.2s ease;
+    }
+
+    #discount-bar-{{ ai_gen_id }} .discount-bar__terms:hover {
+      opacity: 0.75;
+    }
+
+    @media screen and (max-width: 749px) {
+      /* Keep icon + sentence inline; sentence wraps naturally */
+      #discount-bar-{{ ai_gen_id }} .discount-bar__inner {
+        justify-content: center;
+        gap: 10px;
+      }
+
+      #discount-bar-{{ ai_gen_id }} .discount-bar__icon img {
+        width: {{ section.settings.icon_size | times: 0.85 }}px;
+        height: {{ section.settings.icon_size | times: 0.85 }}px;
+      }
+    }
+  {% endstyle %}
+
+  <div id="discount-bar-{{ ai_gen_id }}" {{ section.shopify_attributes }}>
+    {%- if has_content -%}
+      <div class="discount-bar__inner">
+        {%- if icon_image != blank -%}
+          <span class="discount-bar__icon">
+            <img
+              src="{{ icon_image | image_url: width: 100 }}"
+              alt=""
+              loading="lazy"
+              width="100"
+              height="100"
+            >
+          </span>
+        {%- endif -%}
+
+        {%- if bar_text != blank -%}
+          <p class="discount-bar__text">
+            {{ bar_text }}
+            {%- if has_link -%}
+              <a class="discount-bar__terms" href="{{ link_url }}">{{ link_text }}</a>
+            {%- endif -%}
+          </p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Discount bar",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    { "type": "image_picker", "id": "icon_image", "label": "Icon" },
+    { "type": "text", "id": "bar_text", "label": "Text" },
+    { "type": "url", "id": "link_url", "label": "Link URL" },
+    { "type": "text", "id": "link_text", "label": "Link text", "default": "Terms" },
+
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Content alignment",
+      "options": [
+        { "value": "flex-start", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "flex-end", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "min": 600,
+      "max": 1400,
+      "step": 100,
+      "unit": "px",
+      "label": "Maximum width",
+      "default": 1200
+    },
+    {
+      "type": "range",
+      "id": "spacing",
+      "min": 8,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Spacing between elements",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "min": 4,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Vertical padding",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "label": "Horizontal padding",
+      "default": 20
+    },
+
+    { "type": "header", "content": "Icon" },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "min": 16,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "label": "Icon size",
+      "default": 24
+    },
+
+    { "type": "header", "content": "Text" },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 14
+    },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#ffffff" },
+
+    { "type": "header", "content": "Link" },
+    {
+      "type": "range",
+      "id": "link_text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Link text size",
+      "default": 14
+    },
+    { "type": "color", "id": "link_color", "label": "Link color", "default": "#ffffff" },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#405de6" }
+  ],
+  "presets": [
+    { "name": "Discount bar" }
+  ]
+}
+{% endschema %}
+

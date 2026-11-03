@@ -1,0 +1,442 @@
+{%- comment -%}
+  TEAM MENU SECTION (FCTR)
+
+  Used on:
+  - collection.team-collection-page
+  - page.team-homepage (or any page with custom.team_reference set)
+  - product.team-product (team-styled product page)
+  - customers/* (account pages) via customer.metafields.custom.team
+
+  Team resolution order:
+  0) From customer metafield (logged in): customer.metafields.custom.team
+  1) From collection metafield:          collection.metafields.custom.team_reference
+  2) From page metafield:                page.metafields.custom.team_reference
+  3) From product metafields:
+        - product.metafields.custom.team
+        - product.metafields.custom.teams
+        - product.metafields.custom.team_reference
+{%- endcomment -%}
+
+{%- assign ENABLE_TEAM_DEBUG = false -%}
+{%- assign team = nil -%}
+
+{%- if team == nil and customer and customer.metafields and customer.metafields.custom and customer.metafields.custom.team and customer.metafields.custom.team.value -%}
+  {%- assign team = customer.metafields.custom.team.value -%}
+{%- endif -%}
+
+{%- if team == nil
+  and collection
+  and collection.metafields
+  and collection.metafields.custom
+  and collection.metafields.custom.team_reference
+  and collection.metafields.custom.team_reference.value
+-%}
+  {%- assign team = collection.metafields.custom.team_reference.value -%}
+{%- endif -%}
+
+{%- if team == nil
+  and page
+  and page.metafields
+  and page.metafields.custom
+  and page.metafields.custom.team_reference
+  and page.metafields.custom.team_reference.value
+-%}
+  {%- assign team = page.metafields.custom.team_reference.value -%}
+{%- endif -%}
+
+{%- if team == nil and product and product.metafields and product.metafields.custom -%}
+  {%- if product.metafields.custom.team and product.metafields.custom.team.value -%}
+    {%- assign team = product.metafields.custom.team.value -%}
+  {%- endif -%}
+
+  {%- if team == nil
+    and product.metafields.custom.teams
+    and product.metafields.custom.teams.value
+    and product.metafields.custom.teams.value.size > 0
+  -%}
+    {%- assign team = product.metafields.custom.teams.value | first -%}
+  {%- endif -%}
+
+  {%- if team == nil
+    and product.metafields.custom.team_reference
+    and product.metafields.custom.team_reference.value
+  -%}
+    {%- assign team = product.metafields.custom.team_reference.value -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- if team == nil -%}
+  {%- assign current_host = request.host -%}
+  {%- assign sub_domain = current_host | remove: shop.domain | split: '.' | first -%}
+  {% case sub_domain %}
+    {% when 'krum' %}
+      {%- assign team = metaobjects.team['krum-county-united'] -%}
+    {% when 'tbu' %}
+      {%- assign team = metaobjects.team['tampa-bay-united'] -%}
+    {% when 'fcwestlake' %}
+      {%- assign team = metaobjects.team['fc-westlake'] -%}
+    {% when 'florida' %}
+      {%- assign team = metaobjects.team['florida-premier'] -%}
+    {% when 'san-antonio' %}
+      {%- assign team = metaobjects.team['san-antonio-united-soccer-club'] -%}
+    {% when 'fortress' %}
+      {%- assign team = metaobjects.team['fortress-football-club'] -%}
+    {% when 'sting' %}
+      {%- assign team = metaobjects.team['sting-soccer-club'] -%}
+    {% when 'sanger' %}
+      {%- assign team = metaobjects.team['sanger-soccer-stars'] -%}
+    {% when 'attack' %}
+      {%- assign team = metaobjects.team['attack-fc'] -%}
+    {% when 'heirfc' %}
+      {%- assign team = metaobjects.team['heir-fc'] -%}
+    {% when 'rtg' %}
+      {%- assign team = metaobjects.team['rtg-academy'] -%}
+    {% else %}
+      {%- assign team = metaobjects.team['common'] -%}
+  {% endcase %}
+{%- endif -%}
+
+{%- assign is_subdomain = false -%}
+{%- assign _host = request.host | downcase -%}
+{%- unless _host == 'fctrapparel.com' or _host == 'www.fctrapparel.com' -%}
+  {%- assign is_subdomain = true -%}
+{%- endunless -%}
+
+{%- if ENABLE_TEAM_DEBUG -%}
+  <!-- TEAM DEBUG:
+    host: {{ request.host }}
+    shop_domain: {{ shop.domain }}
+    is_subdomain: {{ is_subdomain }}
+    sub_domain: {{ sub_domain }}
+    template: {{ template.name }}.{{ template.suffix }}
+    resolved_team: {% if team %}{{ team.name }}{% else %}NONE{% endif %}
+    team_menu_handle: {% if team %}{{ team.menu_handle | default: 'BLANK' }}{% else %}NO TEAM{% endif %}
+  -->
+{%- endif -%}
+
+{%- if is_subdomain -%}
+  {%- if template.name == 'collection' and template.suffix == 'team-collection-page' -%}
+    <style>
+      .shopify-section--announcement-bar,
+      .shopify-section--header { display: none !important; }
+
+      .collection-toolbar,
+      .collection-toolbar--sticky,
+      .collection__toolbar,
+      .collection__toolbar-wrapper,
+      .collection__filters,
+      .collection__header,
+      .collection-header,
+      .collection-header--sticky,
+      .facets-toolbar,
+      .facets-toolbar--sticky,
+      [class*="collection"][class*="toolbar"] {
+        position: static !important;
+        top: auto !important;
+        inset-block-start: auto !important;
+        bottom: auto !important;
+        z-index: 1 !important;
+        transform: none !important;
+      }
+    </style>
+  {%- endif -%}
+
+  {%- if template.name == 'page' and template.suffix == 'team-homepage' -%}
+    <style>
+      .shopify-section--announcement-bar,
+      .shopify-section--header { display: none !important; }
+    </style>
+  {%- endif -%}
+
+  {%- if template.name == 'product' and template.suffix == 'team-product' -%}
+    <style>
+      .shopify-section--announcement-bar,
+      .shopify-section--header { display: none !important; }
+    </style>
+  {%- endif -%}
+{%- endif -%}
+
+{%- if is_subdomain and team and team.menu_handle != blank -%}
+  {%- assign menu_handle = team.menu_handle | strip -%}
+  {%- assign primary_color = team.primary_color | default: '#1f4aa8' -%}
+
+  {%- assign search_collection = nil -%}
+  {%- if team.primary_collection and team.primary_collection.value -%}
+    {%- assign search_collection = team.primary_collection.value -%}
+  {%- elsif collection -%}
+    {%- assign search_collection = collection -%}
+  {%- endif -%}
+
+  {%- assign team_products = empty -%}
+  {%- if search_collection -%}
+    {%- assign team_products = search_collection.products -%}
+  {%- endif -%}
+
+  {{ 'team-menu.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'team-menu.js' | asset_url }}" defer></script>
+
+  <style>
+    #shopify-section-{{ section.id }} {
+      --team-menu-primary: {{ primary_color }};
+    }
+  </style>
+
+  <script id="team-menu-products-{{ section.id }}" type="application/json">
+  [
+    {%- paginate search_collection.products by 1000 -%}
+      {%- for product in search_collection.products -%}
+        {
+          "id": {{ product.id | json }},
+          "title": {{ product.title | json }},
+          "url": {{ product.url | json }},
+          "vendor": {{ product.vendor | json }},
+          "price": {{ product.price | money | strip | json }},
+          "image": {% if product.featured_media %}{{ product.featured_media | image_url: width: 300 | json }}{% else %}null{% endif %},
+          "variant_id": {{ product.selected_or_first_available_variant.id | json }},
+          "available": {{ product.selected_or_first_available_variant.available | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    {%- endpaginate -%}
+  ]
+  </script>
+
+  <section
+    class="team-bar"
+    data-section-id="{{ section.id }}"
+    data-products-script-id="team-menu-products-{{ section.id }}"
+    data-mobile-nav-id="TeamMobileNav-{{ section.id }}"
+    data-search-drawer-id="TeamSearchDrawer-{{ section.id }}"
+  >
+    <div class="team-bar__inner page-width">
+
+      <div class="team-bar__mobile-header">
+        <button
+          class="team-bar__toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="TeamMobileNav-{{ section.id }}"
+          aria-label="Toggle team menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="team-bar__mobile-logo">
+          {%- if team.logo -%}
+            {%- assign logo_href = team.team_domain -%}
+            {%- assign logo_label = team.name -%}
+            <a href="{{ logo_href }}" class="team-bar__logo" aria-label="{{ logo_label }}">
+              {{ team.logo | image_url: width: 280 | image_tag: alt: logo_label }}
+            </a>
+          {%- endif -%}
+        </div>
+
+        <div class="team-bar__actions team-bar__mobile-actions">
+          {%- if shop.customer_accounts_enabled -%}
+            <a
+              href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}"
+              class="team-bar__account"
+              aria-label="{% if customer %}Account{% else %}Log in{% endif %}"
+            >
+              <span class="team-bar__account-icon">
+                <svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 24 24" role="img">
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2" fill="none"/>
+                </svg>
+              </span>
+            </a>
+          {%- endif -%}
+
+          <button
+            type="button"
+            class="team-bar__search team-bar__search-toggle"
+            aria-label="Search"
+            aria-expanded="false"
+            aria-controls="TeamSearchDrawer-{{ section.id }}"
+          >
+            <span class="team-bar__search-icon">
+              <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" role="img">
+                <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" fill="none" />
+                <line x1="15" y1="15" x2="20" y2="20" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </span>
+          </button>
+
+          <a
+            href="{{ routes.cart_url }}"
+            {% unless settings.cart_type == 'page' or request.page_type == 'cart' %}
+              is="toggle-link"
+              aria-controls="mini-cart"
+              aria-expanded="false"
+            {% endunless %}
+            class="team-bar__cart"
+            aria-label="{{ 'header.general.cart' | t | escape }}"
+            data-no-instant
+          >
+            <span class="team-bar__cart-icon">
+              {%- case settings.cart_icon -%}
+                {%- when 'shopping_bag' -%}
+                  {%- render 'icon' with 'header-cart' -%}
+                {%- when 'shopping_cart' -%}
+                  {%- render 'icon' with 'header-shopping-cart' -%}
+                {%- when 'tote_bag' -%}
+                  {%- render 'icon' with 'header-tote-bag' -%}
+              {%- endcase -%}
+            </span>
+
+            <cart-count class="team-bar__cart-count bubble-count" aria-hidden="true">
+              {{ cart.item_count }}
+            </cart-count>
+          </a>
+        </div>
+      </div>
+
+      <div class="team-bar__desktop-logo">
+        {%- if team.logo -%}
+          {%- assign logo_href = team.team_domain -%}
+          {%- assign logo_label = team.name -%}
+          <a href="{{ logo_href }}" class="team-bar__logo" aria-label="{{ logo_label }}">
+            {{ team.logo | image_url: width: 280 | image_tag: alt: logo_label }}
+          </a>
+        {%- endif -%}
+      </div>
+
+      <nav class="team-bar__desktop-nav" aria-label="Team navigation">
+        <ul class="team-bar__list">
+          {%- assign team_menu = linklists[menu_handle] -%}
+          {%- if team_menu and team_menu.links.size > 0 -%}
+            {%- for link in team_menu.links -%}
+              <li class="team-bar__item {% if link.links.size > 0 %}has-children{% endif %}">
+                <a href="{{ link.url }}" class="team-bar__link" {% if link.links.size > 0 %}aria-expanded="false"{% endif %}>
+                  {{ link.title }}
+                </a>
+
+                {%- if link.links.size > 0 -%}
+                  <ul class="team-bar__dropdown">
+                    {%- for child in link.links -%}
+                      <li>
+                        <a href="{{ child.url }}" class="team-bar__dropdown-link">
+                          {{ child.title }}
+                        </a>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endif -%}
+              </li>
+            {%- endfor -%}
+          {%- endif -%}
+        </ul>
+      </nav>
+
+      <div class="team-bar__actions team-bar__desktop-actions">
+        {%- if shop.customer_accounts_enabled -%}
+          <a
+            href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}"
+            class="team-bar__account"
+            aria-label="{% if customer %}Account{% else %}Log in{% endif %}"
+          >
+            <span class="team-bar__account-icon">
+              <svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 24 24" role="img">
+                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2" fill="none"/>
+              </svg>
+            </span>
+          </a>
+        {%- endif -%}
+
+        <button
+          type="button"
+          class="team-bar__search team-bar__search-toggle"
+          aria-label="Search"
+          aria-expanded="false"
+          aria-controls="TeamSearchDrawer-{{ section.id }}"
+        >
+          <span class="team-bar__search-icon">
+            <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" role="img">
+              <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" fill="none" />
+              <line x1="15" y1="15" x2="20" y2="20" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </span>
+        </button>
+
+        <a
+          href="{{ routes.cart_url }}"
+          {% unless settings.cart_type == 'page' or request.page_type == 'cart' %}
+            is="toggle-link"
+            aria-controls="mini-cart"
+            aria-expanded="false"
+          {% endunless %}
+          class="team-bar__cart"
+          aria-label="{{ 'header.general.cart' | t | escape }}"
+          data-no-instant
+        >
+          <span class="team-bar__cart-icon">
+            {%- case settings.cart_icon -%}
+              {%- when 'shopping_bag' -%}
+                {%- render 'icon' with 'header-cart' -%}
+              {%- when 'shopping_cart' -%}
+                {%- render 'icon' with 'header-shopping-cart' -%}
+              {%- when 'tote_bag' -%}
+                {%- render 'icon' with 'header-tote-bag' -%}
+            {%- endcase -%}
+          </span>
+
+          <cart-count class="team-bar__cart-count bubble-count" aria-hidden="true">
+            {{ cart.item_count }}
+          </cart-count>
+        </a>
+      </div>
+
+      {% render 'team-mobile-nav', section: section, menu_handle: menu_handle %}
+
+    </div>
+  </section>
+
+  <div id="TeamSearchDrawer-{{ section.id }}" class="team-search-drawer" aria-hidden="true">
+    <div class="team-search-drawer__overlay"></div>
+
+    <div class="team-search-drawer__panel" role="dialog" aria-modal="true" aria-label="Search team products">
+      <div class="team-search-drawer__header">
+        <span class="team-search-drawer__search-icon">
+          <svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 24 24" role="img">
+            <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" fill="none"></circle>
+            <line x1="15" y1="15" x2="20" y2="20" stroke="currentColor" stroke-width="2"></line>
+          </svg>
+        </span>
+
+        <input
+          id="TeamSearchInput-{{ section.id }}"
+          type="text"
+          class="team-search-drawer__input"
+          placeholder="What are you looking for?"
+          autocomplete="off"
+        >
+
+        <button type="button" class="team-search-drawer__close" aria-label="Close search">
+          <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" role="img">
+            <line x1="5" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line>
+            <line x1="19" y1="5" x2="5" y2="19" stroke="currentColor" stroke-width="2"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="team-search-drawer__body">
+        <div class="team-search-drawer__results"></div>
+        <div class="team-search-drawer__empty">Start typing to search team products.</div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Team menu",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Team menu"
+    }
+  ]
+}
+{% endschema %}

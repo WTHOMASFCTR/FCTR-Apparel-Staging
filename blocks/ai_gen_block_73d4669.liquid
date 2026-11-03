@@ -1,0 +1,450 @@
+{% doc %}
+  @prompt
+    I want a gallery section where images can be horizontal, square, portrait, or adapt to image size. I want there to be the option to have 2-5 images. I want the images to be able to link so when someone clicks the image it takes them to the link. I want the ability to put a gallery title in and be able to have the title justified to the left, center, or right. , The font should match the theme settings. Make the title an H2, Each image needs an H4. I have the option to have the text on the image or have underneath for the block. I also want the option to add an overlay with a selected color to each image. I want the option for the images to stack on mobile or be a scrollable carosel
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-gallery-{{ ai_gen_id }} {
+    width: 100%;
+    padding: 40px 20px;
+  }
+
+  .ai-gallery-title-{{ ai_gen_id }} {
+    margin: 0 0 30px;
+    text-align: {{ block.settings.title_alignment }};
+    font-family: {{ settings.heading_font.family }}, {{ settings.heading_font.fallback_families }};
+    font-weight: {{ settings.heading_font.weight }};
+    font-style: {{ settings.heading_font.style }};
+    color: {{ settings.heading_color }};
+    text-transform: {{ settings.heading_text_transform }};
+  }
+
+  .ai-gallery-grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat({{ block.settings.images_per_row }}, 1fr);
+    gap: {{ block.settings.gap }}px;
+  }
+
+  .ai-gallery-item-{{ ai_gen_id }} {
+    position: relative;
+    overflow: hidden;
+    border-radius: {{ settings.block_border_radius }};
+  }
+
+  .ai-gallery-item-link-{{ ai_gen_id }} {
+    display: block;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .ai-gallery-image-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    {% if block.settings.image_aspect_ratio == 'square' %}
+      aspect-ratio: 1 / 1;
+    {% elsif block.settings.image_aspect_ratio == 'portrait' %}
+      aspect-ratio: 3 / 4;
+    {% elsif block.settings.image_aspect_ratio == 'horizontal' %}
+      aspect-ratio: 4 / 3;
+    {% endif %}
+  }
+
+  .ai-gallery-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    {% if block.settings.image_aspect_ratio == 'natural' %}
+      height: auto;
+    {% else %}
+      object-fit: cover;
+    {% endif %}
+    display: block;
+  }
+
+  .ai-gallery-image-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-gallery-image-placeholder-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    max-width: 200px;
+    max-height: 200px;
+  }
+
+  .ai-gallery-overlay-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: {{ block.settings.overlay_color }};
+    opacity: {{ block.settings.overlay_opacity }};
+    pointer-events: none;
+  }
+
+  .ai-gallery-caption-{{ ai_gen_id }} {
+    {% if block.settings.caption_position == 'on_image' %}
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+      color: #ffffff;
+    {% else %}
+      padding: 15px 0 0;
+      color: {{ settings.heading_color }};
+    {% endif %}
+    margin: 0;
+    font-family: {{ settings.heading_font.family }}, {{ settings.heading_font.fallback_families }};
+    font-weight: {{ settings.heading_font.weight }};
+    font-style: {{ settings.heading_font.style }};
+    text-transform: {{ settings.heading_text_transform }};
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-gallery-grid-{{ ai_gen_id }} {
+      {% if block.settings.mobile_layout == 'stack' %}
+        grid-template-columns: 1fr;
+      {% elsif block.settings.mobile_layout == 'carousel' %}
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: {{ block.settings.gap }}px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      {% endif %}
+    }
+
+    .ai-gallery-grid-{{ ai_gen_id }}::-webkit-scrollbar {
+      display: none;
+    }
+
+    {% if block.settings.mobile_layout == 'carousel' %}
+      .ai-gallery-item-{{ ai_gen_id }} {
+        flex: 0 0 85%;
+        scroll-snap-align: start;
+      }
+    {% endif %}
+  }
+{% endstyle %}
+
+<div class="ai-gallery-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  {% if block.settings.gallery_title != blank %}
+    <h2 class="ai-gallery-title-{{ ai_gen_id }}">{{ block.settings.gallery_title }}</h2>
+  {% endif %}
+
+  <div class="ai-gallery-grid-{{ ai_gen_id }}">
+    {% for i in (1..5) %}
+      {% assign image_key = 'image_' | append: i %}
+      {% assign caption_key = 'caption_' | append: i %}
+      {% assign link_key = 'link_' | append: i %}
+      
+      {% assign current_image = block.settings[image_key] %}
+      {% assign current_caption = block.settings[caption_key] %}
+      {% assign current_link = block.settings[link_key] %}
+
+      {% if i <= block.settings.number_of_images %}
+        <div class="ai-gallery-item-{{ ai_gen_id }}">
+          {% if current_link != blank %}
+            <a href="{{ current_link }}" class="ai-gallery-item-link-{{ ai_gen_id }}">
+          {% else %}
+            <div class="ai-gallery-item-link-{{ ai_gen_id }}">
+          {% endif %}
+            
+            <div class="ai-gallery-image-wrapper-{{ ai_gen_id }}">
+              {% if current_image %}
+                <img
+                  src="{{ current_image | image_url: width: 1200 }}"
+                  alt="{{ current_image.alt | escape }}"
+                  loading="lazy"
+                  width="{{ current_image.width }}"
+                  height="{{ current_image.height }}"
+                  class="ai-gallery-image-{{ ai_gen_id }}"
+                >
+              {% else %}
+                <div class="ai-gallery-image-placeholder-{{ ai_gen_id }}">
+                  {{ 'image' | placeholder_svg_tag }}
+                </div>
+              {% endif %}
+
+              {% if block.settings.show_overlay %}
+                <div class="ai-gallery-overlay-{{ ai_gen_id }}"></div>
+              {% endif %}
+
+              {% if current_caption != blank and block.settings.caption_position == 'on_image' %}
+                <h4 class="ai-gallery-caption-{{ ai_gen_id }}">{{ current_caption }}</h4>
+              {% endif %}
+            </div>
+
+            {% if current_caption != blank and block.settings.caption_position == 'underneath' %}
+              <h4 class="ai-gallery-caption-{{ ai_gen_id }}">{{ current_caption }}</h4>
+            {% endif %}
+
+          {% if current_link != blank %}
+            </a>
+          {% else %}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Image gallery",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Gallery settings"
+    },
+    {
+      "type": "text",
+      "id": "gallery_title",
+      "label": "Gallery title"
+    },
+    {
+      "type": "select",
+      "id": "title_alignment",
+      "label": "Title alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "number_of_images",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "label": "Number of images",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "images_per_row",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "label": "Images per row",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "label": "Gap between images",
+      "default": 20
+    },
+    {
+      "type": "select",
+      "id": "image_aspect_ratio",
+      "label": "Image aspect ratio",
+      "options": [
+        {
+          "value": "natural",
+          "label": "Natural"
+        },
+        {
+          "value": "square",
+          "label": "Square"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait"
+        },
+        {
+          "value": "horizontal",
+          "label": "Horizontal"
+        }
+      ],
+      "default": "natural"
+    },
+    {
+      "type": "select",
+      "id": "caption_position",
+      "label": "Caption position",
+      "options": [
+        {
+          "value": "on_image",
+          "label": "On image"
+        },
+        {
+          "value": "underneath",
+          "label": "Underneath"
+        }
+      ],
+      "default": "underneath"
+    },
+    {
+      "type": "header",
+      "content": "Overlay"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_overlay",
+      "label": "Show overlay",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "Overlay opacity",
+      "default": 0.3
+    },
+    {
+      "type": "header",
+      "content": "Mobile layout"
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": "Mobile layout",
+      "options": [
+        {
+          "value": "stack",
+          "label": "Stack"
+        },
+        {
+          "value": "carousel",
+          "label": "Scrollable carousel"
+        }
+      ],
+      "default": "stack"
+    },
+    {
+      "type": "header",
+      "content": "Image 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_1",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_1",
+      "label": "Caption"
+    },
+    {
+      "type": "url",
+      "id": "link_1",
+      "label": "Link"
+    },
+    {
+      "type": "header",
+      "content": "Image 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_2",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_2",
+      "label": "Caption"
+    },
+    {
+      "type": "url",
+      "id": "link_2",
+      "label": "Link"
+    },
+    {
+      "type": "header",
+      "content": "Image 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_3",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_3",
+      "label": "Caption"
+    },
+    {
+      "type": "url",
+      "id": "link_3",
+      "label": "Link"
+    },
+    {
+      "type": "header",
+      "content": "Image 4"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_4",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_4",
+      "label": "Caption"
+    },
+    {
+      "type": "url",
+      "id": "link_4",
+      "label": "Link"
+    },
+    {
+      "type": "header",
+      "content": "Image 5"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_5",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "caption_5",
+      "label": "Caption"
+    },
+    {
+      "type": "url",
+      "id": "link_5",
+      "label": "Link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image gallery"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,78 @@
+{%- assign current_host = request.host -%}
+{%- assign sub_domain = current_host | remove: shop.domain | split: '.' | first -%}
+{% assign team_data = metaobjects.team_homepage[sub_domain] %}
+
+{% if team_data.landing_page != blank %}
+  <script>
+    (function() {
+      var landingPage = '{{ team_data.landing_page.value | default: team_data.landing_page }}';
+      if (landingPage) {
+        document.cookie = 'team_landing_page=' + encodeURIComponent(landingPage) + '; path=/; domain=.fctrapparel.com; max-age=' + (30 * 24 * 60 * 60) + '; SameSite=Lax';
+        try { localStorage.setItem('team_landing_page', landingPage); } catch(e) {}
+      }
+    })();
+  </script>
+{% endif %}
+
+{% if request.page_type == 'index' and sub_domain != blank %}
+  {% assign team_data = metaobjects.team_homepage[sub_domain] %}
+
+  {% if team_data.landing_page != blank %}
+    <script>
+      window.location.replace('{{ team_data.landing_page.value | default: team_data.landing_page }}');
+    </script>
+
+    <meta http-equiv="refresh" content="0; url={{ team_data.landing_page.value | default: team_data.landing_page }}">
+  {% endif %}
+{% endif %}
+
+{% assign isTeamNameSet = cart.attributes['Team Name'] %}
+
+{% if isTeamNameSet == blank %}
+  <script>
+    (function () {
+      const attributeKey = "Team Name";
+      const attributeValue = {{ team_data.team_homepage | json }};
+  if (!attributeValue) {
+    return;
+  }
+  async function ensureCartAttribute() {
+    try {
+      const cartResponse = await fetch('/cart.js', {
+        credentials: 'same-origin'
+      });
+
+      const cart = await cartResponse.json();
+
+      if (
+        cart.attributes &&
+        cart.attributes[attributeKey] &&
+        cart.attributes[attributeKey] !== "" &&
+        cart.attributes[attributeKey] === attributeValue
+      ) {
+        return;
+      }
+
+      await fetch('/cart/update.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          attributes: {
+            [attributeKey]: attributeValue
+          }
+        })
+      });
+      console.log("Team Name cart attribute set.");
+
+    } catch (error) {
+      console.error("Error setting cart attribute:", error);
+    }
+  }
+  setTimeout(ensureCartAttribute, 300);
+
+})();
+</script>
+{% endif %}

@@ -1,0 +1,931 @@
+{%- comment -%}
+  Cart drawer (mini cart)
+{%- endcomment -%}
+
+<cart-drawer section="{{ section.id }}" id="mini-cart" class="mini-cart drawer drawer--large">
+  <span class="drawer__overlay"></span>
+
+  <header class="drawer__header">
+    <p class="drawer__title heading h6">
+      {%- case settings.cart_icon -%}
+        {%- when 'shopping_bag' -%}
+          {%- render 'icon' with 'header-cart' -%}
+        {%- when 'shopping_cart' -%}
+          {%- render 'icon' with 'header-shopping-cart' -%}
+        {%- when 'tote_bag' -%}
+          {%- render 'icon' with 'header-tote-bag' -%}
+      {%- endcase -%}
+
+      {%- if cart.item_count == 0 -%}
+        {{ 'cart.general.title' | t }}
+      {%- else -%}
+        {{ 'cart.general.item_count' | t: count: cart.item_count }}
+      {%- endif -%}
+    </p>
+
+    <button
+      type="button"
+      class="drawer__close-button tap-area"
+      data-action="close"
+      title="{{ 'general.accessibility.close' | t | escape }}"
+    >
+      {%- render 'icon' with 'close' -%}
+    </button>
+  </header>
+
+  {%- if cart.item_count == 0 -%}
+    <div class="drawer__content drawer__content--center">
+      <p>{{ 'cart.general.empty' | t }}</p>
+
+      <div class="button-wrapper">
+        <a href="{{ section.settings.empty_button_link }}" class="button button--primary">
+          {{ 'cart.general.start_shopping' | t }}
+        </a>
+      </div>
+    </div>
+  {%- else -%}
+    <div class="drawer__content">
+      {%- comment -%}
+        Free shipping progress bar (uses section settings)
+      {%- endcomment -%}
+      {%- if section.settings.show_free_shipping_bar and cart.requires_shipping -%}
+        {%- assign threshold_in_cents = section.settings.free_shipping_threshold | default: 75 | times: 100 -%}
+
+        {%- assign calculated_total_price = cart.total_price -%}
+
+        {%- for line_item in cart.items -%}
+          {%- unless line_item.requires_shipping -%}
+            {%- assign calculated_total_price = calculated_total_price | minus: line_item.final_line_price -%}
+          {%- endunless -%}
+        {%- endfor -%}
+
+        {%- comment -%}Remove cart level discounts from the computed subtotal{%- endcomment -%}
+        {%- assign total_cart_discount = 0 -%}
+        {%- for discount_application in cart.cart_level_discount_applications -%}
+          {%- assign total_cart_discount = total_cart_discount | plus: discount_application.total_allocated_amount -%}
+        {%- endfor -%}
+        {%- assign calculated_total_price = calculated_total_price | minus: total_cart_discount -%}
+
+        {%- assign progress_ratio = calculated_total_price | times: 1.0 | divided_by: threshold_in_cents | at_most: 1 -%}
+
+        <free-shipping-bar
+          threshold="{{ threshold_in_cents }}"
+          class="shipping-bar"
+          style="--progress: {{ progress_ratio }}"
+        >
+          {%- if calculated_total_price >= threshold_in_cents -%}
+            <span class="shipping-bar__text text--small">
+              {{ 'cart.general.free_shipping' | t }}
+            </span>
+          {%- else -%}
+            {%- capture remaining_amount -%}
+              {{ threshold_in_cents | minus: calculated_total_price | money }}
+            {%- endcapture -%}
+            <span class="shipping-bar__text text--small">
+              {{ 'cart.general.free_shipping_remaining_html' | t: remaining_amount: remaining_amount }}
+            </span>
+          {%- endif -%}
+
+          <span class="shipping-bar__progress"></span>
+        </free-shipping-bar>
+
+        {%- if section.settings.free_shipping_subnote != blank -%}
+          <p class="shipping-bar__subnote text--subdued text--xsmall">
+            {{ section.settings.free_shipping_subnote | escape }}
+          </p>
+        {%- endif -%}
+      {%- endif -%}
+
+      <form id="mini-cart-form" action="{{ routes.cart_url }}" novalidate method="post">
+        <input type="hidden" name="checkout">
+
+        {%- for line_item in cart.items -%}
+          {%- assign is_bundle = false -%}
+          {%- if line_item.has_components -%}
+            {%- assign is_bundle = true -%}
+          {%- endif -%}
+
+          <line-item class="line-item{% if is_bundle %} line-item--bundle{% endif %}">
+            <div class="line-item__content-wrapper">
+              <a
+                href="{{ line_item.url }}"
+                class="line-item__image-wrapper"
+                tabindex="-1"
+                aria-hidden="true"
+              >
+                <span class="line-item__loader" hidden>
+                  <span class="line-item__loader-spinner spinner" hidden>
+                    {% render 'icon' with 'spinner', width: 16, height: 16, stroke_width: 6 %}
+                  </span>
+                  <span class="line-item__loader-mark" hidden>
+                    {% render 'icon' with 'check', width: 20, height: 20 %}
+                  </span>
+                </span>
+
+                {%- if line_item.image != blank -%}
+                  {{
+                    line_item.image
+                    | image_url: width: line_item.image.width
+                    | image_tag:
+                      loading: 'lazy',
+                      sizes: '(max-width: 740px) 80px, 92px',
+                      widths: '80,92,160,184,240,276',
+                      class: 'line-item__image'
+                  }}
+                {%- endif -%}
+              </a>
+
+              {%- unless is_bundle -%}
+                {%- capture unit_price -%}
+                  {%- if line_item.unit_price_measurement -%}
+                    <div class="price text--subdued">
+                      <div class="unit-price-measurement">
+                        <span class="unit-price-measurement__price">
+                          {{ line_item.unit_price | money }}
+                        </span>
+                        <span class="unit-price-measurement__separator">/</span>
+
+                        {%- if line_item.unit_price_measurement.reference_value != 1 -%}
+                          <span class="unit-price-measurement__reference-value">
+                            {{ line_item.unit_price_measurement.reference_value }}
+                          </span>
+                        {%- endif -%}
+
+                        <span class="unit-price-measurement__reference-unit">
+                          {{ line_item.unit_price_measurement.reference_unit }}
+                        </span>
+                      </div>
+                    </div>
+                  {%- endif -%}
+                {%- endcapture -%}
+              {%- endunless -%}
+
+              {%- capture line_price -%}
+                {%- comment -%}
+                  The "compare at" price shows unless an automatic discount
+                  is applied; then the real discount takes precedence.
+                {%- endcomment -%}
+                <span class="price {% if line_item.original_line_price > line_item.final_line_price or line_item.final_line_price == 0 or line_item.variant.compare_at_price > line_item.variant.price %}price--highlight{% endif %}">
+                  <span class="visually-hidden">{{ 'product.general.sale_price' | t }}</span>
+
+                  {%- if line_item.final_line_price == 0 -%}
+                    {{ 'cart.general.free' | t }}
+                  {%- else -%}
+                    {{ line_item.final_line_price | money }}
+                  {%- endif -%}
+                </span>
+
+                {%- if line_item.original_line_price > line_item.final_line_price or line_item.variant.compare_at_price > line_item.variant.price -%}
+                  <span class="price price--compare">
+                    <span class="visually-hidden">{{ 'product.general.regular_price' | t }}</span>
+
+                    {%- if line_item.original_line_price > line_item.final_line_price -%}
+                      {{ line_item.original_line_price | money }}
+                    {%- else -%}
+                      {{ line_item.variant.compare_at_price | times: line_item.quantity | money }}
+                    {%- endif -%}
+                  </span>
+                {%- endif -%}
+              {%- endcapture -%}
+
+              <div class="line-item__info">
+                <div class="product-item-meta">
+                  {%- if settings.show_vendor and is_bundle == false -%}
+                    {%- assign vendor_handle = line_item.vendor | handle -%}
+                    {%- assign collection_for_vendor = collections[vendor_handle] -%}
+
+                    {%- unless collection_for_vendor.empty? -%}
+                      <a
+                        class="product-item-meta__vendor heading heading--xxsmall"
+                        href="{{ collection_for_vendor.url }}"
+                      >
+                        {{ line_item.vendor }}
+                      </a>
+                    {%- else -%}
+                      <a
+                        class="product-item-meta__vendor heading heading--xxsmall"
+                        href="{{ line_item.vendor | url_for_vendor }}"
+                      >
+                        {{ line_item.vendor }}
+                      </a>
+                    {%- endunless -%}
+                  {%- endif -%}
+
+                  <a href="{{ line_item.url }}" class="product-item-meta__title text--small">
+                    {{ line_item.title }}
+                  </a>
+
+                  {%- unless is_bundle -%}
+                    {%- capture line_item_properties -%}
+                      {%- unless line_item.product.has_only_default_variant -%}
+                        <span class="product-item-meta__property text--subdued text--xsmall">
+                          {{ line_item.variant.title }}
+                        </span>
+                      {%- endunless -%}
+
+                      {%- if line_item.selling_plan_allocation -%}
+                        <span class="product-item-meta__property text--subdued text--xsmall">
+                          {{ line_item.selling_plan_allocation.selling_plan.name }}
+                        </span>
+                      {%- endif -%}
+
+                      {%- unless line_item.properties == blank -%}
+                        <ul
+                          class="product-item-meta__property list--unstyled text--subdued text--xsmall"
+                          role="list"
+                        >
+                          {%- for property in line_item.properties -%}
+                            {%- assign first_character_in_key = property.first | truncate: 1, '' -%}
+
+                            {%- if property.last == blank or first_character_in_key == '_' -%}
+                              {%- continue -%}
+                            {%- endif -%}
+
+                            <li>{{ property.first }}: {{ property.last }}</li>
+                          {%- endfor -%}
+                        </ul>
+                      {%- endunless -%}
+                    {%- endcapture -%}
+
+                    {%- if line_item_properties != blank -%}
+                      <div class="product-item-meta__property-list">
+                        {{ line_item_properties }}
+                      </div>
+                    {%- endif -%}
+
+                    <div class="product-item-meta__price-list-container text--small">
+                      <div class="price-list hidden-tablet-and-up">
+                        {{ line_price }}
+                        {{ unit_price }}
+                      </div>
+
+                      {%- if unit_price != blank -%}
+                        <div class="price-list hidden-phone">
+                          {{ unit_price }}
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  {%- endunless -%}
+
+                  {%- if is_bundle -%}
+                    {%- if line_item.components != blank -%}
+                      <ul class="bundle-components__list text--subdued text--xsmall" role="list">
+                        {%- for component in line_item.components -%}
+                          <li class="bundle-component-item">
+                            {%- unless component.product.has_only_default_variant -%}
+                              {{ component.product.title }} - {{ component.variant.title }}
+                            {%- else -%}
+                              {{ component.product.title }}
+                            {%- endunless -%}
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    {%- endif -%}
+                    <div class="bundle-components__price text--small">{{ line_item.final_line_price | money }}</div>
+                  {%- endif -%}
+                </div>
+
+                {%- if line_item.line_level_discount_allocations != blank -%}
+                  <ul class="line-item__discount-list list--unstyled" role="list">
+                    {%- for discount_allocation in line_item.line_level_discount_allocations -%}
+                      <li class="line-item__discount-badge discount-badge">
+                        {%- render 'icon' with 'discount-badge' -%}
+                        {{ discount_allocation.discount_application.title }}
+                        (-{{ discount_allocation.amount | money }})
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endif -%}
+
+                {%- if is_bundle -%}
+                  <div class="line-item__quantity">
+                    <a
+                      href="{{ line_item.url_to_remove }}"
+                      class="line-item__remove-button link text--subdued text--xxsmall"
+                      data-no-instant
+                    >
+                      {{ 'cart.general.remove' | t }}
+                    </a>
+                  </div>
+                {%- else -%}
+                  {% liquid
+                    assign max_quantity = ''
+                    assign variant = line_item.variant
+
+                    if variant.inventory_management != blank and variant.inventory_policy == 'deny'
+                      assign current_quantity_for_variant = cart | item_count_for_variant: variant.id
+                      assign max_quantity = variant.inventory_quantity | minus: current_quantity_for_variant | plus: line_item.quantity
+                    endif
+
+                    if variant.quantity_rule.max != nil
+                      assign max_quantity = max_quantity | default: 999999 | at_most: variant.quantity_rule.max
+                    endif
+                  %}
+
+                  <line-item-quantity class="line-item__quantity">
+                    <div class="quantity-selector quantity-selector--small">
+                      <a
+                        href="{{ routes.cart_change_url }}?quantity={{ line_item.quantity | minus: line_item.variant.quantity_rule.increment | at_least: 0 }}&line={{ forloop.index }}"
+                        class="quantity-selector__button"
+                        aria-label="{{ 'cart.general.decrease_quantity' | t | escape }}"
+                        data-no-instant
+                      >
+                        {%- render 'icon' with 'minus' -%}
+                      </a>
+
+                      <input
+                        is="input-number"
+                        class="quantity-selector__input text--xsmall"
+                        autocomplete="off"
+                        type="number"
+                        inputmode="numeric"
+                        name="updates[]"
+                        data-line="{{ forloop.index }}"
+                        value="{{ line_item.quantity }}"
+                        {% if max_quantity != '' %}max="{{ max_quantity }}"{% endif %}
+                        size="{{ line_item.quantity | append: '' | size | at_least: 2 }}"
+                        aria-label="{{ 'cart.general.change_quantity' | t | escape }}"
+                      >
+
+                      {%- if max_quantity == blank or line_item.quantity < max_quantity -%}
+                        {% assign increment = line_item.quantity | plus: line_item.variant.quantity_rule.increment %}
+
+                        {%- if line_item.variant.quantity_rule.max != nil -%}
+                          {%- assign increment = increment | at_most: line_item.variant.quantity_rule.max -%}
+                        {%- endif -%}
+
+                        <a
+                          href="{{ routes.cart_change_url }}?quantity={{ increment }}&line={{ forloop.index }}"
+                          class="quantity-selector__button"
+                          aria-label="{{ 'cart.general.increase_quantity' | t | escape }}"
+                          data-no-instant
+                        >
+                          {%- render 'icon' with 'plus' -%}
+                        </a>
+                      {%- else -%}
+                        <span
+                          class="quantity-selector__button"
+                          aria-label="{{ 'cart.general.no_more_stock' | t | escape }}"
+                          data-tooltip="{{ 'cart.general.no_more_stock' | t | escape }}"
+                        >
+                          {%- render 'icon' with 'plus' -%}
+                        </span>
+                      {%- endif -%}
+                    </div>
+
+                    <a
+                      href="{{ line_item.url_to_remove }}"
+                      class="line-item__remove-button link text--subdued text--xxsmall"
+                      data-no-instant
+                    >
+                      {{ 'cart.general.remove' | t }}
+                    </a>
+                  </line-item-quantity>
+                {%- endif -%}
+              </div>
+
+              <div class="line-item__price-list-container text--small hidden-phone">
+                {%- if settings.show_vendor and is_bundle == false -%}
+                  {%- comment -%}
+                    Keep price aligned with product title by inserting
+                    a visually-hidden vendor line.
+                  {%- endcomment -%}
+                  <span
+                    class="product-item-meta__vendor heading heading--xxsmall"
+                    style="visibility: hidden"
+                  >x</span>
+                {%- endif -%}
+
+                <div class="price-list price-list--stack">
+                  {{ line_price }}
+                </div>
+              </div>
+            </div>
+          </line-item>
+        {%- endfor -%}
+      </form>
+
+      {%- capture fctr_bundle_offer_markup -%}
+        {%- assign fctr_shown_bundle_pairings = '|' -%}
+        {%- assign fctr_shown_bundle_groups = '|' -%}
+        {%- for fctr_offer_line_item in cart.items -%}
+          {%- assign fctr_bundle_details = fctr_offer_line_item.product.metafields.custom.bundle_details.value | strip -%}
+          {%- assign fctr_bundle_pairing = fctr_offer_line_item.product.metafields.custom.bundle_pairing.value -%}
+
+          {%- if fctr_bundle_details == blank or fctr_bundle_pairing == blank -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- if fctr_bundle_pairing.url == blank or fctr_bundle_pairing.available == false or fctr_bundle_pairing.id == fctr_offer_line_item.product_id -%}
+            {%- continue -%}
+          {%- endif -%}
+
+          {%- assign fctr_source_cart_items = cart.items | where: 'product_id', fctr_offer_line_item.product_id -%}
+          {%- assign fctr_paired_cart_items = cart.items | where: 'product_id', fctr_bundle_pairing.id -%}
+          {%- assign fctr_source_quantity = fctr_source_cart_items | sum: 'quantity' -%}
+          {%- assign fctr_paired_quantity = fctr_paired_cart_items | sum: 'quantity' -%}
+          {%- assign fctr_missing_quantity = fctr_source_quantity | minus: fctr_paired_quantity -%}
+          {%- assign fctr_offer_group_key = '' -%}
+
+          {%- for fctr_offer_allocation in fctr_offer_line_item.line_level_discount_allocations -%}
+            {%- assign fctr_offer_discount = fctr_offer_allocation.discount_application -%}
+            {%- unless fctr_offer_discount.type == 'automatic' and fctr_offer_discount.target_type == 'line_item' -%}
+              {%- continue -%}
+            {%- endunless -%}
+            {%- if fctr_offer_discount.title == blank -%}
+              {%- continue -%}
+            {%- endif -%}
+
+            {%- assign fctr_buy_quantity = 0 -%}
+            {%- assign fctr_get_quantity = 0 -%}
+            {%- for fctr_discount_cart_item in cart.items -%}
+              {%- for fctr_cart_allocation in fctr_discount_cart_item.line_level_discount_allocations -%}
+                {%- assign fctr_cart_discount = fctr_cart_allocation.discount_application -%}
+                {%- if fctr_cart_discount.title == fctr_offer_discount.title and fctr_cart_discount.type == fctr_offer_discount.type and fctr_cart_discount.target_type == fctr_offer_discount.target_type and fctr_cart_discount.value_type == fctr_offer_discount.value_type and fctr_cart_discount.value == fctr_offer_discount.value -%}
+                  {%- if fctr_cart_allocation.amount > 0 -%}
+                    {%- assign fctr_get_quantity = fctr_get_quantity | plus: fctr_discount_cart_item.quantity -%}
+                  {%- else -%}
+                    {%- assign fctr_buy_quantity = fctr_buy_quantity | plus: fctr_discount_cart_item.quantity -%}
+                  {%- endif -%}
+                  {%- break -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endfor -%}
+
+            {%- if fctr_buy_quantity > 0 and fctr_get_quantity > 0 -%}
+              {%- if fctr_offer_allocation.amount > 0 -%}
+                {%- assign fctr_missing_quantity = fctr_get_quantity | minus: fctr_buy_quantity -%}
+                {%- assign fctr_offer_side = 'get' -%}
+              {%- else -%}
+                {%- assign fctr_missing_quantity = fctr_buy_quantity | minus: fctr_get_quantity -%}
+                {%- assign fctr_offer_side = 'buy' -%}
+              {%- endif -%}
+              {%- capture fctr_offer_group_key -%}|{{ fctr_offer_discount.title | url_encode }}:{{ fctr_offer_discount.value_type }}:{{ fctr_offer_discount.value }}:{{ fctr_offer_side }}|{%- endcapture -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- if fctr_missing_quantity <= 0 -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- capture fctr_bundle_pairing_key -%}|{{ fctr_bundle_pairing.id }}|{%- endcapture -%}
+          {%- if fctr_shown_bundle_pairings contains fctr_bundle_pairing_key -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- if fctr_offer_group_key != blank and fctr_shown_bundle_groups contains fctr_offer_group_key -%}
+            {%- continue -%}
+          {%- endif -%}
+
+          {%- assign fctr_shown_bundle_pairings = fctr_shown_bundle_pairings | append: fctr_bundle_pairing.id | append: '|' -%}
+          {%- assign fctr_shown_bundle_groups = fctr_shown_bundle_groups | append: fctr_offer_group_key -%}
+
+
+          <article class="fctr-cart-offer" data-offer-product="{{ fctr_offer_line_item.product_id }}" data-offer-pairing="{{ fctr_bundle_pairing.id }}" data-offer-missing-quantity="{{ fctr_missing_quantity }}">
+            <div class="fctr-cart-offer__bar">
+              <svg class="fctr-cart-offer__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false">
+                <path d="M3 3h9l9 9-9 9-9-9V3Z" stroke-linejoin="round" />
+                <circle cx="7.5" cy="7.5" r="1.5" />
+              </svg>
+              <div class="fctr-cart-offer__copy">
+                {%- if section.settings.bundle_offer_heading != blank -%}
+                  <span class="fctr-cart-offer__heading">{{ section.settings.bundle_offer_heading | escape }}</span>
+                {%- endif -%}
+                <p class="fctr-cart-offer__details">{{ fctr_bundle_details | escape }}</p>
+              </div>
+            </div>
+            <div class="fctr-cart-offer__product">
+              {%- render 'product-item',
+                product: fctr_bundle_pairing,
+                block: fctr_offer_line_item,
+                reduced_content: true,
+                reduced_font_size: true,
+                hide_secondary_image: true,
+                sizes_attribute: '80px'
+              -%}
+            </div>
+          </article>
+        {%- endfor -%}
+      {%- endcapture -%}
+
+      {%- if fctr_bundle_offer_markup != blank -%}
+        <div class="fctr-cart-offers" style="--fctr-cart-offer-background: {{ section.settings.bundle_offer_background | default: '#3d3935' }}; --fctr-cart-offer-color: {{ section.settings.bundle_offer_text_color | default: '#ffffff' }};">
+          {{- fctr_bundle_offer_markup -}}
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_recommendations -%}
+        <cart-drawer-recommendations
+          section-id="{{ section.id }}"
+          product-id="{{ cart.items.first.product_id }}"
+          class="mini-cart__recommendations"
+        >
+          {%- assign acceptable_recommendations_count = 0 -%}
+
+          {%- for product in recommendations.products -%}
+            {%- assign matching_product = cart.items | where: 'product_id', product.id | first -%}
+            {%- if matching_product == blank -%}
+              {%- assign acceptable_recommendations_count = acceptable_recommendations_count | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- if recommendations.performed -%}
+            {%- if acceptable_recommendations_count > 0 -%}
+              <div class="mini-cart__recommendations-inner">
+                {%- if section.settings.recommendations_title != blank -%}
+                  <p class="mini-cart__recommendations-heading heading heading--small hidden-pocket">
+                    {{ section.settings.recommendations_title | escape }}
+                  </p>
+                  <p class="mini-cart__recommendations-heading heading heading--xsmall text--subdued hidden-lap-and-up">
+                    {{ section.settings.recommendations_title | escape }}
+                  </p>
+                {%- endif -%}
+
+                <div class="scroller">
+                  <div class="scroller__inner">
+                    <div class="mini-cart__recommendations-list">
+                      {%- assign shown_products_count = 0 -%}
+
+                      {%- for product in recommendations.products -%}
+                        {%- if shown_products_count >= 6 -%}
+                          {%- break -%}
+                        {%- endif -%}
+
+                        {%- assign matching_product = cart.items | where: 'product_id', product.id -%}
+
+                        {%- if matching_product.size == 0 -%}
+                          {%- assign shown_products_count = shown_products_count | plus: 1 -%}
+                          {%- render 'product-item',
+                            product: product,
+                            reduced_content: true,
+                            reduced_font_size: true,
+                            hide_secondary_image: true,
+                            sizes_attribute: '(max-width: 740px) 65px, 92px'
+                          -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {%- endif -%}
+          {%- else -%}
+            <div class="mini-cart__recommendations-inner">
+              <div class="spinner">
+                {%- render 'icon' with 'spinner', stroke_width: 3, width: 40, height: 40 -%}
+              </div>
+            </div>
+          {%- endif -%}
+        </cart-drawer-recommendations>
+      {%- endif -%}
+    </div>
+
+    <footer class="mini-cart__drawer-footer drawer__footer drawer__footer--tight drawer__footer--bordered">
+      {%- capture shipping_tax_note -%}
+        {{ 'cart.general.shipping_tax_note_html' | t: link: shop.shipping_policy.url }}
+      {%- endcapture -%}
+
+      {%- if cart.cart_level_discount_applications != blank -%}
+        <ul class="mini-cart__discount-list list--unstyled" role="list">
+          {%- for discount_application in cart.cart_level_discount_applications -%}
+            <li class="mini-cart__discount">
+              <span class="mini-cart__discount-badge discount-badge">
+                {%- render 'icon' with 'discount-badge' -%}
+                {{ discount_application.title }}
+              </span>
+              <span class="mini-cart__discount-price text--xsmall text--subdued">
+                -{{ discount_application.total_allocated_amount | money }}
+              </span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      {%- if section.settings.show_order_note or shipping_tax_note != '' -%}
+        <div class="mini-cart__actions text--subdued text--xsmall">
+          {%- if section.settings.show_order_note -%}
+            <button
+              type="button"
+              is="toggle-button"
+              id="order-note-toggle"
+              class="link"
+              data-action="toggle-order-note"
+              aria-controls="mini-cart-note"
+              aria-expanded="false"
+            >
+              {%- if cart.note == blank -%}
+                {{ 'cart.general.add_order_note' | t }}
+              {%- else -%}
+                {{ 'cart.general.edit_order_note' | t }}
+              {%- endif -%}
+            </button>
+          {%- endif -%}
+
+          {%- if shipping_tax_note != '' -%}
+            <span>{{ shipping_tax_note }}</span>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_checkout_button -%}
+        <button
+          form="mini-cart-form"
+          type="submit"
+          class="checkout-button button button--primary button--full"
+          name="checkout"
+        >
+          <span class="checkout-button__lock">
+            {%- render 'icon' with 'lock' -%}
+          </span>
+          {{ 'cart.general.checkout' | t }}
+          <span class="square-separator"></span>
+          {{ cart.total_price | money_with_currency }}
+        </button>
+      {%- else -%}
+        <a
+          href="{{ routes.cart_url }}"
+          class="button button--primary button--full"
+          data-no-instant
+        >
+          {{ 'cart.general.go_to_cart' | t }}
+        </a>
+      {%- endif -%}
+    </footer>
+  {%- endif -%}
+
+  {%- if section.settings.show_order_note -%}
+    <openable-element id="mini-cart-note" class="mini-cart__order-note">
+      <span class="openable__overlay"></span>
+      <label
+        for="cart[note]"
+        class="mini-cart__order-note-title heading heading--xsmall"
+      >
+        {{ 'cart.general.add_order_note' | t }}
+      </label>
+      <textarea
+        is="cart-note"
+        name="note"
+        id="cart[note]"
+        rows="3"
+        aria-owns="order-note-toggle"
+        class="input__field input__field--textarea"
+        placeholder="{{ 'cart.general.order_note_placeholder' | t }}"
+      >{{ cart.note }}</textarea>
+      <button
+        type="button"
+        data-action="close"
+        class="form__submit form__submit--closer button button--secondary"
+      >
+        {{ 'cart.general.order_note_save' | t }}
+      </button>
+    </openable-element>
+  {%- endif -%}
+</cart-drawer>
+
+<style>
+  #shopify-section-{{ section.id }} .shipping-bar__subnote {
+    margin: 8px 0 0;
+    text-align: center;
+    line-height: 1.4;
+  }
+</style>
+
+{% stylesheet %}
+  .fctr-cart-offers {
+    display: grid;
+    gap: 18px;
+    margin-block: 22px 8px;
+  }
+
+  .fctr-cart-offer {
+    min-width: 0;
+    border: 1px solid rgba(var(--text-color, 61, 57, 53), .2);
+    border-radius: 8px;
+  }
+
+  .fctr-cart-offer__bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 7px 7px 0 0;
+    color: var(--fctr-cart-offer-color, #fff);
+    background: var(--fctr-cart-offer-background, #3d3935);
+  }
+
+  .fctr-cart-offer__icon {
+    flex: 0 0 22px;
+    margin-top: 2px;
+  }
+
+  .fctr-cart-offer__copy {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .fctr-cart-offer__heading {
+    font-family: var(--heading-font-family, inherit);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .fctr-cart-offer__details {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .fctr-cart-offer__product {
+    padding: 14px;
+  }
+
+  .fctr-cart-offer__product > .product-item {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    text-align: start;
+  }
+
+  .fctr-cart-offer__product > .product-item > .product-item__image-wrapper {
+    grid-column: 1;
+    grid-row: 1;
+    width: 80px;
+    margin: 0;
+    border-radius: 4px;
+  }
+
+  .fctr-cart-offer__product > .product-item > .product-item__info {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    text-align: start;
+  }
+
+  .fctr-cart-offer__product > .product-item > variant-swatch-king {
+    display: none !important;
+  }
+
+  .fctr-cart-offer__product > .product-item > .product-item__info > .product-item-meta {
+    text-align: start;
+  }
+
+  .fctr-cart-offer__product .product-item-meta__title {
+    display: block;
+    margin: 0 0 8px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+    line-height: 1.4;
+  }
+
+  .fctr-cart-offer__product .product-item-meta__price-list-container {
+    margin: 0;
+  }
+
+  .fctr-cart-offer__product .price-list {
+    justify-content: flex-start;
+    text-align: start;
+  }
+
+  .fctr-cart-offer__product .product-item__cta-wrapper {
+    margin-top: 12px;
+    text-align: start;
+  }
+
+  .fctr-cart-offer__product .product-item__link {
+    min-height: 44px;
+    max-width: 100%;
+    padding: 9px 14px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    color: inherit;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .fctr-cart-offer__product a:focus-visible,
+  .fctr-cart-offer__product button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+  .fctr-cart-offer__product :is(quick-buy-drawer, quick-buy-popover) variant-picker {
+    display: block !important;
+  }
+
+  .fctr-cart-offer__product :is(quick-buy-drawer, quick-buy-popover) variant-picker input[type="radio"]:not([hidden]),
+  .fctr-cart-offer__product :is(quick-buy-drawer, quick-buy-popover) variant-picker select:not([hidden]) {
+    display: block !important;
+  }
+
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Cart drawer",
+  "class": "shopify-section--mini-cart",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_free_shipping_bar",
+      "label": "Show free shipping progress bar",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "free_shipping_threshold",
+      "label": "Free shipping threshold (in store currency)",
+      "default": 75
+    },
+    {
+      "type": "text",
+      "id": "free_shipping_subnote",
+      "label": "Free shipping subnote",
+      "default": "Does not include uniform orders",
+      "visible_if": "{{ section.settings.show_free_shipping_bar }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_order_note",
+      "label": "Show order note",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_checkout_button",
+      "label": "Show checkout button",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "empty_button_link",
+      "label": "Empty button link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "header",
+      "content": "Cross-sell",
+      "info": "Dynamic recommendations are based on the items in your cart. They change and improve with time. [Learn more](https://help.shopify.com/en/themes/development/recommended-products)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_recommendations",
+      "label": "Show cart recommendations",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "recommendations_title",
+      "label": "Recommendations heading",
+      "default": "You may also like",
+      "visible_if": "{{ section.settings.show_recommendations }}"
+    },
+    {
+      "type": "header",
+      "content": "Bundle offers"
+    },
+    {
+      "type": "paragraph",
+      "content": "Shows Bundle Details and Bundle Pairing from products in the cart. Offers stay hidden when either field is blank, the paired product is unavailable, or it is already in the cart."
+    },
+    {
+      "type": "text",
+      "id": "bundle_offer_heading",
+      "label": "Offer heading",
+      "default": "Special offer"
+    },
+    {
+      "type": "color",
+      "id": "bundle_offer_background",
+      "label": "Offer bar background",
+      "default": "#3d3935"
+    },
+    {
+      "type": "color",
+      "id": "bundle_offer_text_color",
+      "label": "Offer bar text",
+      "default": "#ffffff"
+    }
+  ]
+}
+{% endschema %}
+
+
+
+
+
+
+

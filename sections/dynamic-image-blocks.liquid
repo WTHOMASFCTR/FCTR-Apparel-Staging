@@ -1,0 +1,371 @@
+{% if section.blocks.size > 0 %}
+  <section id="dynamic-image-blocks-{{ section.id }}" class="dynamic-image-blocks-section">
+    <div class="{% if section.settings.full_width %}dynamic-image-blocks-section__full{% else %}page-width{% endif %}">
+      {% for block in section.blocks %}
+        {% assign desktop_image = block.settings.desktop_image %}
+        {% assign mobile_image = block.settings.mobile_image %}
+        {% assign mobile_display_image = mobile_image | default: desktop_image %}
+
+        {% if desktop_image != blank %}
+          <div
+            class="dynamic-image-block dynamic-image-block--{{ block.id }} dynamic-image-block--size-{{ block.settings.size_mode }}"
+            {{ block.shopify_attributes }}
+            style="
+              --block-width-desktop: {{ block.settings.image_width_desktop }};
+              --block-width-mobile: {{ block.settings.image_width_mobile }};
+              --block-height-desktop: {{ block.settings.image_height_desktop }};
+              --block-height-mobile: {{ block.settings.image_height_mobile }};
+              --block-original-width-desktop: {{ desktop_image.width }}px;
+              --block-original-ratio-desktop: {{ desktop_image.width }} / {{ desktop_image.height }};
+              --block-original-width-mobile: {{ mobile_display_image.width }}px;
+              --block-original-ratio-mobile: {{ mobile_display_image.width }} / {{ mobile_display_image.height }};
+              --block-pt: {{ block.settings.padding_top }};
+              --block-pb: {{ block.settings.padding_bottom }};
+              --block-pl: {{ block.settings.padding_left }};
+              --block-pr: {{ block.settings.padding_right }};
+              --block-radius: {{ block.settings.border_radius }};
+              --block-object-fit: {{ block.settings.object_fit }};
+              --block-object-position: {{ block.settings.object_position }};
+            "
+          >
+            <div class="dynamic-image-block__inner">
+              {% if block.settings.link != blank %}
+                <a href="{{ block.settings.link }}" class="dynamic-image-block__link">
+              {% endif %}
+
+              <div class="dynamic-image-block__media">
+                {% if mobile_image != blank %}
+                  <picture class="dynamic-image-block__picture">
+                    <source
+                      media="(max-width: 749px)"
+                      srcset="
+                        {{ mobile_image | image_url: width: 400 }} 400w,
+                        {{ mobile_image | image_url: width: 600 }} 600w,
+                        {{ mobile_image | image_url: width: 800 }} 800w,
+                        {{ mobile_image | image_url: width: 1200 }} 1200w,
+                        {{ mobile_image | image_url: width: 1600 }} 1600w
+                      "
+                      sizes="100vw"
+                    >
+                    {{
+                      desktop_image
+                      | image_url: width: 2400
+                      | image_tag:
+                        class: 'dynamic-image-block__image',
+                        loading: 'lazy',
+                        widths: '600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2400',
+                        sizes: '(min-width: 750px) 100vw, 100vw',
+                        alt: block.settings.alt_text | default: collection.title | escape
+                    }}
+                  </picture>
+                {% else %}
+                  {{
+                    desktop_image
+                    | image_url: width: 2400
+                    | image_tag:
+                      class: 'dynamic-image-block__image',
+                      loading: 'lazy',
+                      widths: '600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2400',
+                      sizes: '100vw',
+                      alt: block.settings.alt_text | default: collection.title | escape
+                  }}
+                {% endif %}
+              </div>
+
+              {% if block.settings.link != blank %}
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+
+  <style>
+    #shopify-section-{{ section.id }},
+    #dynamic-image-blocks-{{ section.id }} {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .page-width,
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-blocks-section__full {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block {
+      margin: 0;
+      padding-top: var(--block-pt);
+      padding-bottom: var(--block-pb);
+      padding-left: var(--block-pl);
+      padding-right: var(--block-pr);
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__inner {
+      width: 100%;
+      margin: 0;
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      line-height: 0;
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__media {
+      width: var(--block-width-desktop);
+      height: var(--block-height-desktop);
+      max-width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: var(--block-radius);
+      line-height: 0;
+      display: block;
+      position: relative;
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__picture,
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__media picture {
+      display: block;
+      width: 100%;
+      height: 100%;
+      line-height: 0;
+    }
+
+    #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__image {
+      display: block !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0;
+      object-fit: var(--block-object-fit) !important;
+      object-position: var(--block-object-position) !important;
+    }
+
+    #dynamic-image-blocks-{{ section.id }}
+      .dynamic-image-block--size-original
+      .dynamic-image-block__media {
+      width: var(--block-original-width-desktop);
+      height: auto;
+      aspect-ratio: var(--block-original-ratio-desktop);
+    }
+
+    #dynamic-image-blocks-{{ section.id }}
+      .dynamic-image-block--size-original
+      .dynamic-image-block__image {
+      object-fit: contain !important;
+    }
+
+    @media screen and (max-width: 749px) {
+      #dynamic-image-blocks-{{ section.id }} .dynamic-image-block__media {
+        width: var(--block-width-mobile);
+        height: var(--block-height-mobile);
+      }
+
+      #dynamic-image-blocks-{{ section.id }}
+        .dynamic-image-block--size-original
+        .dynamic-image-block__media {
+        width: var(--block-original-width-mobile);
+        height: auto;
+        aspect-ratio: var(--block-original-ratio-mobile);
+      }
+    }
+  </style>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Dynamic image blocks",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full width container",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image_block",
+      "name": "Image block",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "desktop_image",
+          "label": "Desktop image"
+        },
+        {
+          "type": "image_picker",
+          "id": "mobile_image",
+          "label": "Mobile image (optional)"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Image link"
+        },
+        {
+          "type": "text",
+          "id": "alt_text",
+          "label": "Alt text",
+          "default": "Collection image"
+        },
+        {
+          "type": "select",
+          "id": "size_mode",
+          "label": "Image size",
+          "default": "custom",
+          "options": [
+            {
+              "value": "custom",
+              "label": "Custom desktop and mobile size"
+            },
+            {
+              "value": "original",
+              "label": "Original image size"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "image_width_desktop",
+          "label": "Desktop image width",
+          "default": "100%",
+          "info": "Used only when Image size is Custom. Examples: 100%, 1200px, 80vw"
+        },
+        {
+          "type": "text",
+          "id": "image_height_desktop",
+          "label": "Desktop image height",
+          "default": "500px",
+          "info": "Used only when Image size is Custom. Examples: 500px, 60vh"
+        },
+        {
+          "type": "text",
+          "id": "image_width_mobile",
+          "label": "Mobile image width",
+          "default": "100%",
+          "info": "Used only when Image size is Custom. Examples: 100%, 90vw, 320px"
+        },
+        {
+          "type": "text",
+          "id": "image_height_mobile",
+          "label": "Mobile image height",
+          "default": "300px",
+          "info": "Used only when Image size is Custom. Examples: 300px, 40vh"
+        },
+        {
+          "type": "select",
+          "id": "object_fit",
+          "label": "Image fit",
+          "default": "cover",
+          "options": [
+            {
+              "value": "cover",
+              "label": "Cover"
+            },
+            {
+              "value": "contain",
+              "label": "Contain"
+            },
+            {
+              "value": "fill",
+              "label": "Fill"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "object_position",
+          "label": "Image position",
+          "default": "center center",
+          "options": [
+            {
+              "value": "left top",
+              "label": "Left top"
+            },
+            {
+              "value": "center top",
+              "label": "Center top"
+            },
+            {
+              "value": "right top",
+              "label": "Right top"
+            },
+            {
+              "value": "left center",
+              "label": "Left center"
+            },
+            {
+              "value": "center center",
+              "label": "Center"
+            },
+            {
+              "value": "right center",
+              "label": "Right center"
+            },
+            {
+              "value": "left bottom",
+              "label": "Left bottom"
+            },
+            {
+              "value": "center bottom",
+              "label": "Center bottom"
+            },
+            {
+              "value": "right bottom",
+              "label": "Right bottom"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "padding_top",
+          "label": "Padding top",
+          "default": "0px"
+        },
+        {
+          "type": "text",
+          "id": "padding_bottom",
+          "label": "Padding bottom",
+          "default": "0px"
+        },
+        {
+          "type": "text",
+          "id": "padding_left",
+          "label": "Padding left",
+          "default": "0px"
+        },
+        {
+          "type": "text",
+          "id": "padding_right",
+          "label": "Padding right",
+          "default": "0px"
+        },
+        {
+          "type": "text",
+          "id": "border_radius",
+          "label": "Border radius",
+          "default": "0px"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Dynamic image blocks",
+      "blocks": [
+        {
+          "type": "image_block"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

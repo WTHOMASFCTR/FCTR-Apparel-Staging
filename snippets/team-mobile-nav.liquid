@@ -1,0 +1,30 @@
+<nav id="TeamMobileNav-{{ section.id }}" class="team-bar__mobile-nav" aria-label="Team navigation">
+  <ul class="team-bar__mobile-list">
+    {%- assign team_menu = linklists[menu_handle] -%}
+    {%- if team_menu and team_menu.links.size > 0 -%}
+      {%- for link in team_menu.links -%}
+        <li class="team-bar__mobile-item {% if link.links.size > 0 %}has-children{% endif %}">
+          <a
+            href="{{ link.url }}"
+            class="team-bar__mobile-link"
+            {% if link.links.size > 0 %}aria-expanded="false"{% endif %}
+          >
+            {{ link.title }}
+          </a>
+
+          {%- if link.links.size > 0 -%}
+            <ul class="team-bar__mobile-dropdown">
+              {%- for child in link.links -%}
+                <li>
+                  <a href="{{ child.url }}" class="team-bar__mobile-dropdown-link">
+                    {{ child.title }}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    {%- endif -%}
+  </ul>
+</nav>

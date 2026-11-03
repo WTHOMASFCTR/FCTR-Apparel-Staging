@@ -1,0 +1,161 @@
+{%- comment -%}
+  ------------------------------------------------------------------------------------------------------------------------
+  NOTE TO DEVELOPERS: welcome to Focal theme! We hope that you will enjoy editing this theme as much as we did for
+    developing it. We have put a lot of work to make this theme as developer friendly as possible by offering you
+    hooks to integrate into critical parts of the theme. You will find the complete technical documentation (including
+    all events, dependencies...) in the "custom.js" file, located in the Assets folder.
+  ------------------------------------------------------------------------------------------------------------------------
+{%- endcomment -%}
+
+<!doctype html>
+
+{%- assign direction = 'ltr' -%}
+{%- case request.locale.iso_code -%}
+  {%- when 'ar' or 'arc' or 'dv' or 'fa' or 'ha' or 'he' or 'kwh' or 'ks' or 'ku' or 'ps' or 'ur' or 'yi' -%}
+    {%- assign direction = 'rtl' -%}
+{%- endcase -%}
+
+<html class="no-js" lang="{{ request.locale.iso_code }}" dir="{{ direction }}">
+  <head>
+    <meta charset="utf-8">
+    {% comment %} <script>
+    (function() {
+      if (window.location.hostname === 'fctrapparel.com' && window.location.pathname === '/') {
+        var match = document.cookie.match(/(^| )team_landing_page=([^;]+)/);
+        var landingPage = match ? decodeURIComponent(match[2]) : null;
+        if (!landingPage) {
+          try { landingPage = localStorage.getItem('team_landing_page'); } catch(e) {}
+        }
+        if (landingPage) {
+          window.location.replace(landingPage);
+        }
+      }
+    })();
+    </script> {% endcomment %}
+    {%- if request.page_type == 'index' and customer and customer.metafields.custom.team != blank -%}
+      {%- assign _team_obj = customer.metafields.custom.team.value -%}
+      {%- if _team_obj and _team_obj.handle != blank -%}
+        {%- assign _team_hp = metaobjects.team_homepage[_team_obj.handle] -%}
+        {%- if _team_hp and _team_hp.landing_page != blank -%}
+          {%- assign _lp = _team_hp.landing_page.value | default: _team_hp.landing_page -%}
+          <meta http-equiv="refresh" content="0; url={{ _lp }}">
+          <script>window.location.replace('{{ _lp }}');</script>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="theme-color" content="{{ settings.header_background }}">
+    {% render 'team-context' %}
+
+    <title>{% if page_title == blank %}{{ shop.name }}{% else %}{{ page_title }}{% if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif %}{% endif %}</title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {%- if settings.favicon -%}
+      <link rel="shortcut icon" href="{{ settings.favicon | image_url: width: 96 }}" type="image/png">
+    {%- endif -%}
+
+    {%- comment -%}Few prefech to increase performance on commonly used third-parties{%- endcomment -%}
+    <link rel="preconnect" href="https://cdn.shopify.com">
+    <link rel="dns-prefetch" href="https://productreviews.shopifycdn.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+
+    {%- unless settings.heading_font.system? and settings.text_font.system? -%}
+      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+    {%- endunless -%}
+
+    {%- comment -%}Preload important resources{%- endcomment -%}
+    <link rel="preload" as="style" href="{{ 'theme.css' | asset_url }}">
+    <link rel="preload" as="script" href="{{ 'vendor.js' | asset_url }}">
+    <link rel="preload" as="script" href="{{ 'theme.js' | asset_url }}">
+
+    {%- comment -%}
+      IMPLEMENTATION NOTE: for improving performance, Focal tries to preload images on known pages (such as blog page,
+      product or collection pages). In order to keep a main JS file size minimal, the theme also lazyloads non-essential
+      libraries (such as PhotoSwipe or Flickity) and only loads them on demand.
+    {%- endcomment -%}
+    {%- if request.page_type == 'product' -%}
+      {%- assign selected_media = product.selected_variant.featured_media | default: product.featured_media -%}
+
+      <link rel="preload" as="fetch" href="{{ product.url }}.js" crossorigin>
+
+      {%- if product.media.size > 1 -%}
+        <link rel="preload" as="script" href="{{ 'flickity.js' | asset_url }}">
+      {%- endif -%}
+    {%- endif -%}
+
+    {% render 'social-meta-tags' %}
+    {% render 'microdata-schema' %}
+    {% render 'css-variables', direction: direction %}
+    {% render 'js-variables', direction: direction %}
+
+    <link rel="stylesheet" href="{{ 'theme.css' | asset_url }}">
+
+    <script src="{{ 'vendor.js' | asset_url }}" defer></script>
+    <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'custom.js' | asset_url }}" defer></script>
+
+    {{ content_for_header }}
+  </head>
+
+  {%- assign feature_classes = '' -%}
+
+  {%- if settings.show_image_zoom -%}
+    {% assign feature_classes = feature_classes | append: ' features--image-zoom' %}
+  {%- endif -%}
+
+  <body class="no-focus-outline {{ feature_classes }}" data-instant-allow-query-string>
+    {%- comment -%}
+      FCTR: Active Team Context
+      - Makes the logged-in customer's Team metaobject available globally (including /account* pages)
+      - customer.metafields.custom.team is a Metaobject reference (Team)
+    {%- endcomment -%}
+    {%- assign active_team = nil -%}
+    {%- assign active_team_handle = blank -%}
+
+    {%- if customer and customer.metafields.custom.team != blank -%}
+      {%- assign active_team = customer.metafields.custom.team.value -%}
+
+      {%- comment -%}
+        If your Team metaobject has a field called "handle", this will work.
+        If not, update this line to whatever field you use as the identifier.
+      {%- endcomment -%}
+      {%- if active_team and active_team.handle != blank -%}
+        {%- assign active_team_handle = active_team.handle | strip -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- comment -%}Common SVG definitions that we are re-using in several places{%- endcomment -%}
+    <svg class="visually-hidden">
+      <linearGradient id="rating-star-gradient-half">
+        <stop offset="50%" stop-color="rgb(var(--product-star-rating))" />
+        <stop offset="50%" stop-color="rgb(var(--product-star-rating))" stop-opacity="0.4" />
+      </linearGradient>
+    </svg>
+
+    <a href="#main" class="visually-hidden skip-to-content">{{ 'general.accessibility.skip_to_content' | t }}</a>
+    <loading-bar class="loading-bar"></loading-bar>
+
+    {%- if request.page_type != 'gift_card' and request.page_type != 'password' -%}
+      {%- sections 'header-group' -%}
+      {%- sections 'overlay-group' -%}
+
+      {%- unless settings.cart_type == 'page' or request.page_type == 'cart' -%}
+        {%- section 'mini-cart' -%}
+      {%- endunless -%}
+    {%- endif -%}
+
+    <div id="main" role="main" class="anchor">
+      {{ content_for_layout }}
+    </div>
+
+    {%- if request.page_type != 'gift_card' and request.page_type != 'password' -%}
+      {%- sections 'footer-group' -%}
+    {%- endif -%}
+
+  </body>
+</html>

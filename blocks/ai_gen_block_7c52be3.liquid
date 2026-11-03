@@ -1,0 +1,306 @@
+{% doc %}
+  @prompt
+    Announcement bar with dynamic connections to logo (metafield image), text (metafield single line text), and a button (metafield url for the link and a metafield single line text for the text). I want the ability to determine the text alignment. logo always is to the left of the text, and url to the right of the text, the text is aligning to the center. Make sure the text is pulling the secondary font from the theme. If there is no content pulling from any of the metafields, the announcement bar should not display,  I want the logo to be next to the text, just on the left of the text, I want the button to be next to the text but to the right of the text
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% liquid
+  assign logo_image = block.settings.logo_metafield
+  assign announcement_text = block.settings.text_metafield
+  assign button_url = block.settings.button_url_metafield
+  assign button_text = block.settings.button_text_metafield
+  
+  assign has_content = false
+  if logo_image != blank or announcement_text != blank or button_url != blank or button_text != blank
+    assign has_content = true
+  endif
+%}
+
+{% if has_content %}
+  {% style %}
+    .ai-announcement-bar-{{ ai_gen_id }} {
+      background-color: {{ block.settings.background_color }};
+      padding: {{ block.settings.vertical_padding }}px 0;
+      width: 100%;
+    }
+
+    .ai-announcement-bar-container-{{ ai_gen_id }} {
+      max-width: {{ block.settings.max_width }}px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: {{ block.settings.text_alignment }};
+      gap: 16px;
+    }
+
+    .ai-announcement-bar-logo-{{ ai_gen_id }} {
+      display: block;
+      height: {{ block.settings.logo_height }}px;
+      width: auto;
+      flex-shrink: 0;
+    }
+
+    .ai-announcement-bar-text-{{ ai_gen_id }} {
+      color: {{ block.settings.text_color }};
+      font-family: {{ settings.text_font.family }}, {{ settings.text_font.fallback_families }};
+      font-weight: {{ settings.text_font.weight }};
+      font-style: {{ settings.text_font.style }};
+      font-size: {{ block.settings.text_size }}px;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .ai-announcement-bar-button-{{ ai_gen_id }} {
+      display: inline-block;
+      padding: {{ block.settings.button_padding_vertical }}px {{ block.settings.button_padding_horizontal }}px;
+      background-color: {{ block.settings.button_background }};
+      color: {{ block.settings.button_text_color }};
+      text-decoration: none;
+      border-radius: {{ block.settings.button_border_radius }}px;
+      font-size: {{ block.settings.button_text_size }}px;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .ai-announcement-bar-button-{{ ai_gen_id }}:hover {
+      background-color: {{ block.settings.button_hover_background }};
+      color: {{ block.settings.button_text_color }};
+    }
+
+    @media screen and (max-width: 749px) {
+      .ai-announcement-bar-container-{{ ai_gen_id }} {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .ai-announcement-bar-logo-{{ ai_gen_id }} {
+        height: {{ block.settings.logo_height | times: 0.8 }}px;
+      }
+
+      .ai-announcement-bar-text-{{ ai_gen_id }} {
+        font-size: {{ block.settings.text_size | times: 0.9 }}px;
+      }
+
+      .ai-announcement-bar-button-{{ ai_gen_id }} {
+        font-size: {{ block.settings.button_text_size | times: 0.9 }}px;
+        padding: {{ block.settings.button_padding_vertical | times: 0.8 }}px {{ block.settings.button_padding_horizontal | times: 0.8 }}px;
+      }
+    }
+  {% endstyle %}
+
+  <div class="ai-announcement-bar-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+    <div class="ai-announcement-bar-container-{{ ai_gen_id }}">
+      {% if logo_image != blank %}
+        <img
+          src="{{ logo_image | image_url: width: 400 }}"
+          alt="{{ logo_image.alt | escape }}"
+          class="ai-announcement-bar-logo-{{ ai_gen_id }}"
+          loading="lazy"
+          width="{{ logo_image.width }}"
+          height="{{ logo_image.height }}"
+        >
+      {% endif %}
+
+      {% if announcement_text != blank %}
+        <p class="ai-announcement-bar-text-{{ ai_gen_id }}">{{ announcement_text }}</p>
+      {% endif %}
+
+      {% if button_url != blank and button_text != blank %}
+        <a href="{{ button_url }}" class="ai-announcement-bar-button-{{ ai_gen_id }}">
+          {{ button_text }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_metafield",
+      "label": "Logo image"
+    },
+    {
+      "type": "text",
+      "id": "text_metafield",
+      "label": "Announcement text"
+    },
+    {
+      "type": "url",
+      "id": "button_url_metafield",
+      "label": "Button link"
+    },
+    {
+      "type": "text",
+      "id": "button_text_metafield",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "min": 600,
+      "max": 1600,
+      "step": 100,
+      "unit": "px",
+      "label": "Maximum width",
+      "default": 1200
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Vertical padding",
+      "default": 12
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Content alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "range",
+      "id": "logo_height",
+      "min": 20,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Logo height",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Text"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 15
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#282828"
+    },
+    {
+      "type": "header",
+      "content": "Button"
+    },
+    {
+      "type": "range",
+      "id": "button_text_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Button text size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "min": 4,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Button vertical padding",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "min": 8,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Button horizontal padding",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Button border radius",
+      "default": 0
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#405de6"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_background",
+      "label": "Button hover background",
+      "default": "#2e4bc4"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#f5f5f5"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement bar"
+    }
+  ]
+}
+{% endschema %}

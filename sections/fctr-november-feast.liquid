@@ -1,0 +1,361 @@
+{% liquid
+  assign feast_collection = section.settings.feast_collection
+  assign hero_product = section.settings.hero_product
+  if hero_product == blank or hero_product.available == false
+    assign hero_product = feast_collection.products | where: 'available', true | first
+  endif
+  assign hero_image = section.settings.hero_image | default: hero_product.featured_image
+  assign hero_alt = hero_image.alt | default: hero_product.title
+  assign feast_url = feast_collection.url
+  assign sale_url = section.settings.sale_collection.url
+  assign heading_id = 'FctrNovemberHeading-' | append: section.id
+%}
+{% style %}
+  #shopify-section-{{ section.id }} .fctr-november {
+    --nov-cream: {{ section.settings.cream }};
+    --nov-burgundy: {{ section.settings.burgundy }};
+    --nov-accent: {{ section.settings.accent }};
+    --nov-ink: {{ section.settings.ink }};
+  }
+  #shopify-section-{{ section.id }} .fctr-november__campaigns { width: 100%; max-width: none; margin: 0; }
+{% endstyle %}
+<div class="fctr-november" aria-labelledby="{{ heading_id }}">
+  <nav class="fctr-november__campaigns" aria-label="{{ 'fctr.november.campaign_navigation' | t | escape }}">
+    {% if feast_url != blank %}<a href="{{ feast_url }}">{{ 'fctr.november.feast_strip' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+    {% if sale_url != blank %}<a href="{{ sale_url }}">{{ 'fctr.november.sale_strip' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+  </nav>
+  <div class="fctr-november__wrap">
+    <div class="fctr-november__hero-grid">
+      <div class="fctr-november__feast-hero">
+        <div class="fctr-november__copy">
+          <p class="fctr-november__eyebrow">{{ 'fctr.november.hero_eyebrow' | t }}</p>
+          <h1 class="fctr-november__title" id="{{ heading_id }}">{{ 'fctr.november.hero_title' | t | newline_to_br }}</h1>
+          <p class="fctr-november__tagline">{{ 'fctr.november.hero_tagline' | t }}</p>
+          <p class="fctr-november__description">{{ 'fctr.november.hero_description' | t }}</p>
+          {% if feast_url != blank %}<a class="fctr-november__button" href="{{ feast_url }}">{{ 'fctr.november.shop_feast' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+          <p class="fctr-november__small">{{ 'fctr.november.adult_youth' | t }}</p>
+        </div>
+        {% if hero_image != blank %}
+          <a class="fctr-november__hero-photo{% if section.settings.hero_image != blank %} fctr-november__hero-photo--models{% endif %}" href="{{ hero_product.url | default: feast_url }}">
+            {{ hero_image | image_url: width: 1400 | image_tag: widths: '360, 540, 720, 960, 1200, 1400', sizes: '(max-width: 600px) calc(100vw - 32px), (max-width: 1000px) 55vw, 42vw', loading: 'eager', fetchpriority: 'high', class: 'fctr-november__hero-image', alt: hero_alt }}
+            <span class="fctr-november__photo-label">{% if section.settings.hero_image != blank %}{{ 'fctr.november.models_hero_label' | t }}{% else %}{{ 'fctr.november.front_back' | t }}{% endif %} <span aria-hidden="true">↗</span></span>
+          </a>
+        {% endif %}
+      </div>
+      {% if sale_url != blank %}
+        <aside class="fctr-november__sale" aria-labelledby="FctrNovemberSale-{{ section.id }}">
+          <p class="fctr-november__eyebrow">{{ 'fctr.november.sale_eyebrow' | t }}</p>
+          <h2 id="FctrNovemberSale-{{ section.id }}">{{ 'fctr.november.sale_heading' | t | newline_to_br }}</h2>
+          <p class="fctr-november__sale-copy">{{ 'fctr.november.sale_description' | t }}</p>
+          <a class="fctr-november__button fctr-november__button--lime" href="{{ sale_url }}">{{ 'fctr.november.shop_sale' | t }} <span aria-hidden="true">↗</span></a>
+          <nav class="fctr-november__sale-links" aria-label="{{ 'fctr.november.sale_navigation' | t | escape }}">
+            {% if section.settings.men_sale.url != blank %}<a href="{{ section.settings.men_sale.url }}">{{ 'fctr.november.men' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+            {% if section.settings.women_sale.url != blank %}<a href="{{ section.settings.women_sale.url }}">{{ 'fctr.november.women' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+            {% if section.settings.youth_sale.url != blank %}<a href="{{ section.settings.youth_sale.url }}">{{ 'fctr.november.youth' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+          </nav>
+          <p class="fctr-november__sale-note">{{ 'fctr.november.sale_note' | t }}</p>
+        </aside>
+      {% endif %}
+    </div>
+    {% if section.settings.show_featured %}
+      <div class="fctr-november__featured">
+        <div class="fctr-november__section-head">
+          <div>
+            <p class="fctr-november__eyebrow">{{ 'fctr.november.featured_eyebrow' | t }}</p>
+            <h2>{{ 'fctr.november.featured_heading' | t }}</h2>
+          </div>
+          {% if feast_url != blank %}<a class="fctr-november__text-link" href="{{ feast_url }}">{{ 'fctr.november.view_collection' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+        </div>
+        <div class="fctr-november__products">
+          {% for block in section.blocks %}
+            {% liquid
+              assign feast_product = block.settings.product
+              assign featured_variant = feast_product.variants | where: 'available', true | sort: 'price' | first
+            %}
+            {% if feast_product != blank and feast_product.available %}
+              <article class="fctr-november__product" {{ block.shopify_attributes }}>
+                <a class="fctr-november__product-link" href="{{ feast_product.url }}">
+                  <div class="fctr-november__product-photo">
+                    {% if feast_product.featured_image != blank %}
+                      {{ feast_product.featured_image | image_url: width: 800 | image_tag: widths: '240, 360, 540, 720, 800', sizes: '(max-width: 600px) calc((100vw - 44px) / 2), (max-width: 1000px) 44vw, 23vw', loading: 'lazy', class: 'fctr-november__product-image', alt: feast_product.title }}
+                    {% endif %}
+                    <span class="fctr-november__product-badge">{{ 'fctr.november.front_back' | t }}</span>
+                  </div>
+                  <h3>{{ feast_product.title | remove: 'FCTR Feast | ' | escape }}</h3>
+                  <p class="fctr-november__price">{% if feast_product.price_varies %}<span>{{ 'fctr.november.from' | t }}</span> {% endif %}{{ featured_variant.price | money }}</p>
+                  <span class="fctr-november__product-cta">{{ 'fctr.november.choose_options' | t }} <span aria-hidden="true">↗</span></span>
+                </a>
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <p class="fctr-november__feast-note">{{ 'fctr.november.feast_note' | t }}</p>
+      </div>
+    {% endif %}
+    {% if section.settings.lifestyle_image != blank %}
+      {% liquid
+        assign lifestyle_image = section.settings.lifestyle_image
+        assign lifestyle_alt = 'fctr.november.lifestyle_alt' | t
+        assign lifestyle_alt = lifestyle_image.alt | default: lifestyle_alt
+      %}
+      <section class="fctr-november__lifestyle" aria-labelledby="FctrFeastCrew-{{ section.id }}">
+        {% if feast_url != blank %}<a class="fctr-november__lifestyle-photo" href="{{ feast_url }}">{% else %}<div class="fctr-november__lifestyle-photo">{% endif %}
+          {{ lifestyle_image | image_url: width: 1800 | image_tag: widths: '390, 600, 900, 1200, 1500, 1800', sizes: '(max-width: 760px) calc(100vw - 32px), 58vw', loading: 'lazy', class: 'fctr-november__lifestyle-image', alt: lifestyle_alt }}
+        {% if feast_url != blank %}</a>{% else %}</div>{% endif %}
+        <div class="fctr-november__lifestyle-copy">
+          <p class="fctr-november__eyebrow">{{ 'fctr.november.lifestyle_eyebrow' | t }}</p>
+          <h2 id="FctrFeastCrew-{{ section.id }}">{{ 'fctr.november.lifestyle_heading' | t }}</h2>
+          <p>{{ 'fctr.november.lifestyle_description' | t }}</p>
+          <h3>{{ 'fctr.november.shop_the_look' | t }}</h3>
+          <div class="fctr-november__look-links">
+            {% for look_index in (1..3) %}
+              {% liquid
+                assign look_key = 'look_product_' | append: look_index
+                assign look_product = section.settings[look_key]
+              %}
+              {% if look_product != blank and look_product.available %}
+                <a href="{{ look_product.url }}">{{ look_product.title | remove: 'FCTR Feast | ' | escape }} <span aria-hidden="true">↗</span></a>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {% if feast_url != blank %}<a class="fctr-november__button" href="{{ feast_url }}">{{ 'fctr.november.shop_feast' | t }} <span aria-hidden="true">↗</span></a>{% endif %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+</div>
+{% stylesheet %}
+  .fctr-november { display: block; color: var(--nov-ink); background: #fff; font-family: var(--text-font-family, sans-serif); line-height: 1.55; }
+  .fctr-november *, .fctr-november *::before, .fctr-november *::after { box-sizing: border-box; }
+  .fctr-november a { color: inherit; text-decoration: none; }
+  .fctr-november a:focus-visible { outline: 3px solid var(--nov-burgundy); outline-offset: 4px; }
+  .fctr-november__sale a:focus-visible { outline-color: var(--nov-accent); }
+  .fctr-november img { display: block; width: 100%; max-width: 100%; height: auto; }
+  .fctr-november__campaigns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 1440px; margin-inline: auto; font-size: 11px; font-weight: 600; letter-spacing: .04em; line-height: 1.35; text-transform: uppercase; }
+  .fctr-november__campaigns a { display: flex; gap: 14px; align-items: center; justify-content: center; min-height: 44px; padding: 10px 14px; color: var(--nov-cream); background: var(--nov-burgundy); }
+  .fctr-november__campaigns a:last-child { color: var(--nov-ink); background: var(--nov-accent); }
+  .fctr-november__wrap { max-width: 1440px; margin-inline: auto; }
+  .fctr-november__hero-grid { display: grid; grid-template-columns: minmax(0, 3.15fr) minmax(280px, 1fr); gap: 12px; padding: 16px 20px 0; }
+  .fctr-november__feast-hero { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.2fr); min-height: 500px; background: var(--nov-cream); color: var(--nov-burgundy); overflow: hidden; }
+  .fctr-november__copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 38px 28px; }
+  .fctr-november__eyebrow { margin: 0 0 16px; font-size: 10px; font-weight: 600; letter-spacing: .13em; line-height: 1.5; text-transform: uppercase; }
+  .fctr-november .fctr-november__title { margin: 0 0 20px; color: var(--nov-burgundy); font-family: var(--heading-font-family, sans-serif); font-size: clamp(62px, 6.5vw, 94px); font-weight: var(--heading-font-weight, 700); letter-spacing: -.065em; line-height: .96; text-transform: uppercase; }
+  .fctr-november__tagline { max-width: 290px; margin: 0 0 12px; font-family: var(--heading-font-family, sans-serif); font-size: clamp(17px, 1.5vw, 22px); font-weight: var(--heading-font-weight, 700); line-height: 1.25; }
+  .fctr-november__description { max-width: 275px; margin: 0 0 24px; font-size: 13px; line-height: 1.65; }
+  .fctr-november .fctr-november__button { display: inline-flex; gap: 22px; align-items: center; justify-content: space-between; min-height: 48px; padding: 14px 20px; color: var(--nov-cream); background: var(--nov-burgundy); font-size: 11px; font-weight: 600; line-height: 1.5; text-transform: uppercase; transition: filter .2s ease; }
+  .fctr-november__button:hover { filter: brightness(1.12); }
+  .fctr-november__small { margin: 12px 0 0; font-size: 10px; line-height: 1.5; }
+  .fctr-november__hero-photo { display: block; position: relative; min-width: 0; min-height: 500px; overflow: hidden; background: #c7b99e; }
+  .fctr-november .fctr-november__hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .fctr-november__hero-photo--models .fctr-november__hero-image { object-position: center top; }
+  .fctr-november__photo-label { position: absolute; display: flex; gap: 20px; align-items: center; justify-content: space-between; right: 16px; bottom: 16px; left: 16px; padding: 10px 12px; color: var(--nov-ink); background: var(--nov-cream); font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .fctr-november__sale { display: flex; flex-direction: column; align-items: stretch; padding: 30px 26px 24px; background: var(--nov-ink); color: #fff; }
+  .fctr-november__sale .fctr-november__eyebrow { color: var(--nov-accent); }
+  .fctr-november__sale h2 { margin: 0 0 22px; color: var(--nov-accent); font-family: var(--heading-font-family, sans-serif); font-size: clamp(36px, 3.4vw, 48px); font-weight: var(--heading-font-weight, 700); letter-spacing: -.055em; line-height: 1.02; text-transform: uppercase; }
+  .fctr-november__sale-copy { margin: 0 0 24px; color: #e5e5df; font-size: 13px; line-height: 1.65; }
+  .fctr-november .fctr-november__button--lime { color: var(--nov-ink); background: var(--nov-accent); }
+  .fctr-november__sale-links { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 16px; }
+  .fctr-november__sale-links a { display: inline-flex; gap: 6px; align-items: center; min-height: 44px; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
+  .fctr-november__sale-note { margin: auto 0 0; padding-top: 22px; border-top: 1px solid #50514e; color: #c8cbc4; font-size: 10px; line-height: 1.6; }
+  .fctr-november__featured { padding: 44px 4% 36px; }
+  .fctr-november__section-head { display: flex; gap: 20px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
+  .fctr-november__section-head .fctr-november__eyebrow { margin-bottom: 8px; color: var(--nov-burgundy); }
+  .fctr-november__section-head h2 { margin: 0; color: var(--nov-ink); font-family: var(--heading-font-family, sans-serif); font-size: clamp(26px, 3vw, 38px); font-weight: var(--heading-font-weight, 700); letter-spacing: -.04em; line-height: 1.2; }
+  .fctr-november__text-link { display: inline-flex; gap: 18px; align-items: center; min-height: 44px; font-size: 12px; text-decoration: underline !important; text-underline-offset: 5px; }
+  .fctr-november__products { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  .fctr-november__product { min-width: 0; }
+  .fctr-november__product-link { display: block; }
+  .fctr-november__product-photo { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--nov-cream); }
+  .fctr-november .fctr-november__product-image { height: 100%; object-fit: contain; }
+  .fctr-november__product-badge { position: absolute; top: 10px; left: 10px; padding: 5px 7px; color: var(--nov-cream); background: var(--nov-burgundy); font-size: 9px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  .fctr-november__product h3 { margin: 14px 0 7px; color: var(--nov-ink); font-family: var(--text-font-family, sans-serif); font-size: 13px; font-weight: 600; line-height: 1.45; letter-spacing: normal; text-transform: none; }
+  .fctr-november__price { margin: 0 0 6px; font-family: var(--heading-font-family, sans-serif); font-size: 18px; font-weight: var(--heading-font-weight, 700); line-height: 1.4; }
+  .fctr-november__price > span { font-family: var(--text-font-family, sans-serif); font-size: 11px; font-weight: 400; }
+  .fctr-november__product-cta { display: inline-flex; gap: 10px; align-items: center; min-height: 32px; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
+  .fctr-november__feast-note { max-width: 850px; margin: 24px 0 0; color: #55574f; font-size: 11px; line-height: 1.65; }
+  .fctr-november__lifestyle { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); margin: 0 4% 44px; background: var(--nov-cream); color: var(--nov-burgundy); }
+  .fctr-november__lifestyle-photo { display: block; min-width: 0; background: #c7b99e; }
+  .fctr-november .fctr-november__lifestyle-image { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .fctr-november__lifestyle-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 36px 30px; }
+  .fctr-november__lifestyle-copy h2 { margin: 0 0 16px; color: var(--nov-burgundy); font-family: var(--heading-font-family, sans-serif); font-size: clamp(26px, 2.8vw, 38px); font-weight: var(--heading-font-weight, 700); line-height: 1.13; letter-spacing: -.04em; }
+  .fctr-november__lifestyle-copy > p:not(.fctr-november__eyebrow) { margin: 0 0 22px; font-size: 13px; line-height: 1.65; }
+  .fctr-november__lifestyle-copy h3 { margin: 0 0 8px; color: var(--nov-burgundy); font-family: var(--text-font-family, sans-serif); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .fctr-november__look-links { display: grid; gap: 2px; width: 100%; margin-bottom: 20px; }
+  .fctr-november__look-links a { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding-block: 9px; border-bottom: 1px solid #d4c7b6; font-size: 11px; line-height: 1.5; }
+  .fctr-november__look-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  @media (max-width: 760px) {
+    .fctr-november__lifestyle { grid-template-columns: minmax(0, 1fr); margin: 0 16px 32px; }
+    .fctr-november__lifestyle-photo { aspect-ratio: 3 / 2; }
+    .fctr-november__lifestyle-copy { padding: 28px 24px; }
+    .fctr-november__lifestyle-copy h2 { font-size: 30px; }
+  }
+  @media (min-width: 1600px) { .fctr-november .fctr-november__hero-image { object-fit: contain; } }
+  @media (max-width: 1100px) {
+    .fctr-november__hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .fctr-november__feast-hero { min-height: 480px; grid-template-columns: minmax(0, .8fr) minmax(0, 1.1fr); }
+    .fctr-november__copy { padding: 32px; }
+    .fctr-november__hero-photo { min-height: 480px; }
+    .fctr-november .fctr-november__title { font-size: clamp(62px, 9vw, 88px); }
+    .fctr-november__sale { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; align-items: center; padding: 26px 32px; }
+    .fctr-november__sale .fctr-november__eyebrow { grid-column: 1; margin-bottom: 8px; }
+    .fctr-november__sale h2 { grid-column: 1; grid-row: 2 / span 2; margin: 0; font-size: 42px; }
+    .fctr-november__sale-copy { grid-column: 2; grid-row: 1 / span 2; margin: 0 0 16px; }
+    .fctr-november__sale .fctr-november__button { grid-column: 2; }
+    .fctr-november__sale-links { grid-column: 2; margin: 0; }
+    .fctr-november__sale-note { grid-column: 1 / -1; margin-top: 16px; padding-top: 14px; }
+  }
+  @media (max-width: 600px) {
+    .fctr-november__campaigns { font-size: 9px; letter-spacing: .02em; }
+    .fctr-november__campaigns a { gap: 8px; padding: 10px 8px; }
+    .fctr-november__hero-grid { gap: 12px; padding: 12px 16px 0; }
+    .fctr-november__feast-hero { display: flex; flex-direction: column; min-height: 0; }
+    .fctr-november__copy { padding: 28px 26px 24px; }
+    .fctr-november__eyebrow { font-size: 9px; margin-bottom: 12px; }
+    .fctr-november .fctr-november__title { font-size: clamp(58px, 17vw, 86px); margin-bottom: 14px; }
+    .fctr-november__tagline { max-width: 290px; font-size: 19px; margin-bottom: 10px; }
+    .fctr-november__description { max-width: 310px; font-size: 12px; margin-bottom: 18px; }
+    .fctr-november__small { margin-top: 10px; }
+    .fctr-november__hero-photo { min-height: 0; aspect-ratio: 1.18; }
+    .fctr-november .fctr-november__hero-image { object-fit: cover; }
+    .fctr-november__photo-label { right: 12px; bottom: 12px; left: 12px; padding: 8px 10px; font-size: 9px; }
+    .fctr-november__sale { display: flex; padding: 26px; }
+    .fctr-november__sale h2 { font-size: 44px; margin-bottom: 16px; }
+    .fctr-november__sale-copy { margin: 0 0 18px; }
+    .fctr-november__sale-links { margin-top: 8px; }
+    .fctr-november__sale-note { margin-top: 14px; }
+    .fctr-november__featured { padding: 32px 16px 28px; }
+    .fctr-november__section-head { display: block; margin-bottom: 16px; }
+    .fctr-november__section-head h2 { font-size: 28px; }
+    .fctr-november__text-link { margin-top: 6px; }
+    .fctr-november__products { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+    .fctr-november__product-badge { top: 7px; left: 7px; padding: 4px 5px; font-size: 8px; }
+    .fctr-november__product h3 { margin-top: 10px; font-size: 12px; }
+    .fctr-november__price { font-size: 17px; }
+    .fctr-november__feast-note { margin-top: 20px; font-size: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .fctr-november__button { transition: none; } }
+{% endstylesheet %}
+{% schema %}
+{
+  "name": "FCTR Feast + sale",
+  "tag": "section",
+  "class": "fctr-november-section",
+  "enabled_on": {
+    "templates": [
+      "index"
+    ]
+  },
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "collection",
+      "id": "feast_collection",
+      "label": "FCTR Feast collection"
+    },
+    {
+      "type": "product",
+      "id": "hero_product",
+      "label": "Front-and-back hero product"
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero image override"
+    },
+    {
+      "type": "header",
+      "content": "Feast model imagery"
+    },
+    {
+      "type": "image_picker",
+      "id": "lifestyle_image",
+      "label": "Adult and youth lifestyle image"
+    },
+    {
+      "type": "product",
+      "id": "look_product_1",
+      "label": "First product in the lifestyle image"
+    },
+    {
+      "type": "product",
+      "id": "look_product_2",
+      "label": "Second product in the lifestyle image"
+    },
+    {
+      "type": "product",
+      "id": "look_product_3",
+      "label": "Third product in the lifestyle image"
+    },
+    {
+      "type": "collection",
+      "id": "sale_collection",
+      "label": "Main sale collection"
+    },
+    {
+      "type": "collection",
+      "id": "men_sale",
+      "label": "Men's sale collection"
+    },
+    {
+      "type": "collection",
+      "id": "women_sale",
+      "label": "Women's sale collection"
+    },
+    {
+      "type": "collection",
+      "id": "youth_sale",
+      "label": "Youth sale collection"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_featured",
+      "label": "Show featured Feast products",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "cream",
+      "label": "Feast background",
+      "default": "#f4eddf"
+    },
+    {
+      "type": "color",
+      "id": "burgundy",
+      "label": "Feast accent",
+      "default": "#742535"
+    },
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Sale accent",
+      "default": "#cfdf42"
+    },
+    {
+      "type": "color",
+      "id": "ink",
+      "label": "Sale background and text",
+      "default": "#17191b"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Front-and-back product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "FCTR Feast + sale"
+    }
+  ]
+}
+{% endschema %}
+
+

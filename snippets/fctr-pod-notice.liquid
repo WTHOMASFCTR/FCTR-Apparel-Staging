@@ -1,0 +1,71 @@
+{% doc %}
+  Displays the final-sale notice for Fulfill Engine products.
+  @param {product} product - The product being purchased.
+  @example
+  {% render 'fctr-pod-notice', product: product %}
+{% enddoc %}
+
+{%- if product.tags contains 'Fulfill Engine Product' -%}
+  <aside class="fctr-pod-notice" aria-label="{{ 'product.pod_notice.label' | t | escape }}">
+    <p class="fctr-pod-notice__title">{{ 'product.pod_notice.title' | t | escape }}</p>
+    <p class="fctr-pod-notice__details">
+      {{ 'product.pod_notice.details' | t | escape }}
+      {% if shop.refund_policy.url != blank %}
+        <a href="{{ shop.refund_policy.url | escape }}">{{ 'product.pod_notice.policy_link' | t | escape }}</a>
+      {% endif %}
+    </p>
+  </aside>
+{%- endif -%}
+
+{% stylesheet %}
+  .fctr-pod-notice {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #e4e4e2;
+    border-inline-start: 3px solid #3d3935;
+    border-radius: 2px;
+    background: #f6f6f5;
+    color: #292929;
+    font-family: inherit;
+    text-align: start;
+  }
+
+  .fctr-pod-notice .fctr-pod-notice__title {
+    margin: 0;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: normal;
+    text-transform: none;
+    overflow-wrap: anywhere;
+  }
+
+  .fctr-pod-notice .fctr-pod-notice__details {
+    margin: 3px 0 0;
+    color: #555555;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    letter-spacing: normal;
+    text-transform: none;
+    overflow-wrap: anywhere;
+  }
+
+  .fctr-pod-notice__details a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .fctr-pod-notice__details a:hover {
+    color: #292929;
+  }
+
+  .fctr-pod-notice__details a:focus-visible {
+    outline: 2px solid #292929;
+    outline-offset: 3px;
+  }
+{% endstylesheet %}

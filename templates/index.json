@@ -1,0 +1,381 @@
+{
+  "sections": {
+    "fctr_shop_finds_2026": {
+      "type": "fctr-shop-finds",
+      "blocks": {
+        "find_1": {
+          "type": "product",
+          "settings": {
+            "product": "nike-short-sleeve-dri-fit-athletic-shirt",
+            "audience": "men",
+            "title": "Nike Dri-FIT Athletic Shirt"
+          }
+        },
+        "find_2": {
+          "type": "product",
+          "settings": {
+            "product": "nike-youth-dri-fit-short-sleeve-shirt",
+            "audience": "youth",
+            "title": "Nike Youth Dri-FIT Shirt"
+          }
+        },
+        "find_3": {
+          "type": "product",
+          "settings": {
+            "product": "ua-womens-stadium-tee",
+            "audience": "women",
+            "title": "UA Women’s Stadium Tee"
+          }
+        },
+        "find_4": {
+          "type": "product",
+          "settings": {
+            "product": "nike-youth-hoodie",
+            "audience": "youth",
+            "title": "Nike Youth Hoodie"
+          }
+        },
+        "find_5": {
+          "type": "product",
+          "settings": {
+            "product": "ua-womens-novelty-tech-1-4-zip",
+            "audience": "women",
+            "title": "UA Women’s Tech ¼ Zip"
+          }
+        },
+        "find_6": {
+          "type": "product",
+          "settings": {
+            "product": "nike-sportswear-fleece-trend-womens-crew-neck-sweatshirt",
+            "audience": "women",
+            "title": "Nike Women’s Fleece Crew"
+          }
+        }
+      },
+      "block_order": [
+        "find_1",
+        "find_2",
+        "find_3",
+        "find_4",
+        "find_5",
+        "find_6"
+      ],
+      "name": "FCTR Shop the Finds",
+      "settings": {
+        "show_announcement": false,
+        "announcement": "CURRENT FINDS. EVERYDAY PERFORMANCE. AVAILABLE SIZES VARY.",
+        "eyebrow": "THE MASSIVE FCTR SALE",
+        "heading": "BIG GEAR.\nSMALL\nPRICES.",
+        "heading_tag": "h2",
+        "description": "<p>Performance tees, warm-up layers and everyday favorites. Gear up for your next move.</p>",
+        "button_label": "SHOP ALL SALE",
+        "button_link": "shopify://collections/fctr-apparel-sales",
+        "hero_product_1": "nike-short-sleeve-dri-fit-athletic-shirt",
+        "hero_label_1": "PERFORMANCE TEES",
+        "hero_product_2": "nike-sportswear-fleece-trend-womens-crew-neck-sweatshirt",
+        "hero_label_2": "FLEECE FAVORITES",
+        "show_categories": true,
+        "men_label": "Shop Men’s Sale",
+        "men_link": "shopify://collections/mens-sale",
+        "women_label": "Shop Women’s Sale",
+        "women_link": "shopify://collections/womens-sale",
+        "youth_label": "Shop Youth Sale",
+        "youth_link": "shopify://collections/youth-sale",
+        "show_products": true,
+        "grid_eyebrow": "IN STOCK. READY FOR YOUR NEXT MOVE.",
+        "grid_heading": "Big finds. Small prices.",
+        "show_filters": true,
+        "stock_only": true,
+        "disclaimer": "Select styles, colors and sizes. Prices as marked. Shipping calculated at checkout.",
+        "accent": "#cfdf42",
+        "dark_background": "#17191b",
+        "surface": "#ffffff",
+        "text_color": "#17191b",
+        "image_background": "#f0f0ed"
+      }
+    },
+    "dynamic_image_blocks_9X3Dej": {
+      "type": "dynamic-image-blocks",
+      "blocks": {
+        "image_block_T7DB3p": {
+          "type": "image_block",
+          "settings": {
+            "desktop_image": "shopify://shop_images/FCTR_Apparel__Six_Athletes_in_Motion.png",
+            "mobile_image": "shopify://shop_images/Generated_with_Kive.ai_-_Three_fitness_athletes_mid-workout_with_barbells_in_a_staged_gym_environment__FCTR_Apparel_campaign__clean_commercial_fitness_photography__high-key_studio_lig_11f12743-f2de-41bc-b380-5abcdc7f2005.png",
+            "link": "shopify://collections/fctr-apparel-sales",
+            "alt_text": "Collection image",
+            "size_mode": "original",
+            "image_width_desktop": "100%",
+            "image_height_desktop": "45vh",
+            "image_width_mobile": "100%",
+            "image_height_mobile": "45vh",
+            "object_fit": "cover",
+            "object_position": "center center",
+            "padding_top": "0px",
+            "padding_bottom": "0px",
+            "padding_left": "0px",
+            "padding_right": "0px",
+            "border_radius": "0px"
+          }
+        }
+      },
+      "block_order": [
+        "image_block_T7DB3p"
+      ],
+      "name": "Dynamic image blocks",
+      "settings": {
+        "full_width": true
+      }
+    },
+    "blocks_FGiiTX": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_94a3d1d_6LdNkn": {
+          "type": "ai_gen_block_94a3d1d",
+          "settings": {
+            "desktop_height": 20,
+            "mobile_height": 10
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_94a3d1d_6LdNkn"
+      ],
+      "disabled": true,
+      "name": "Spacer",
+      "settings": {}
+    },
+    "rich_text_MJbEzm": {
+      "type": "rich-text",
+      "disabled": true,
+      "name": "Rich text",
+      "settings": {
+        "subheading": "",
+        "title": "Shop By Activity",
+        "content": "",
+        "button_text": "",
+        "button_link": "",
+        "background_type": "full_width",
+        "text_width": "large",
+        "text_position": "center",
+        "text_alignment": "center",
+        "background": "rgba(0,0,0,0)",
+        "text_color": "rgba(0,0,0,0)",
+        "button_background": "rgba(0,0,0,0)",
+        "button_text_color": "rgba(0,0,0,0)"
+      }
+    },
+    "grid_dynamic_dynamic_gnXeP6": {
+      "type": "grid-dynamic-dynamic",
+      "blocks": {
+        "tile_PHApGg": {
+          "type": "tile",
+          "settings": {
+            "image": "shopify://shop_images/Generated_with_Kive.ai_-_Create_a_bold__premium_FCTR_Sports_running_campaign_image_featuring_two_athletic_models_running_side_by_side_in_a_dynamic_performance_setting__wearing_the_exa_ea07bbca-170c-40de-ba1d-5395cc27f6c4.png",
+            "team_image_field": "running_image",
+            "title": "Running",
+            "team_title_field": "none",
+            "subtitle": "none",
+            "link": "shopify://collections/running-clothes",
+            "team_link_field": "none",
+            "link_text": "Shop Now"
+          }
+        },
+        "tile_yncqNt": {
+          "type": "tile",
+          "settings": {
+            "image": "shopify://shop_images/Generated_with_Kive.ai_-_Create_a_bold__premium_FCTR_Sports_strength-training_campaign_image_featuring_two_athletic_models_lifting_weights_in_a_modern_performance_gym._Dress_both_mode_24fc1188-f032-4a49-b4ec-6954916c878d.png",
+            "team_image_field": "",
+            "title": "Training",
+            "team_title_field": "none",
+            "subtitle": "none",
+            "link": "shopify://collections/gym-gear",
+            "team_link_field": "none",
+            "link_text": "Shop Now"
+          }
+        },
+        "tile_G4LzG8": {
+          "type": "tile",
+          "settings": {
+            "image": "shopify://shop_images/Generated_with_Kive.ai_-_Create_a_bold__premium_FCTR_Sports_soccer_campaign_image_featuring_two_athletic_soccer_players_training_together_in_a_dynamic__high-performance_setting._Dress.png",
+            "team_image_field": "classics_image",
+            "title": "SOCCER",
+            "team_title_field": "none",
+            "subtitle": "none",
+            "link": "shopify://collections/soccer-gear",
+            "team_link_field": "none",
+            "link_text": "Shop Now"
+          }
+        },
+        "tile_mchbJf": {
+          "type": "tile",
+          "settings": {
+            "image": "shopify://shop_images/Generated_with_Kive.ai_-_Create_a_bold__premium_FCTR_Sports_accessories_campaign_image_featuring_only_the_exact_accessories_provided_in_the_uploaded_product_reference_images._Do_not_i.png",
+            "team_image_field": "none",
+            "title": "Accessories",
+            "team_title_field": "none",
+            "subtitle": "none",
+            "link": "shopify://collections/fctr-apparel-accessories",
+            "team_link_field": "none",
+            "link_text": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "tile_PHApGg",
+        "tile_yncqNt",
+        "tile_G4LzG8",
+        "tile_mchbJf"
+      ],
+      "disabled": true,
+      "name": "Team category grid",
+      "settings": {
+        "heading": "",
+        "team_metaobject": "",
+        "overlay_color": "#000000",
+        "overlay_opacity": 0,
+        "gap": 12,
+        "min_height": 360,
+        "show_cta": false
+      }
+    },
+    "blocks_pppHXx": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_94a3d1d_dPYF4m": {
+          "type": "ai_gen_block_94a3d1d",
+          "settings": {
+            "desktop_height": 50,
+            "mobile_height": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_94a3d1d_dPYF4m"
+      ],
+      "disabled": true,
+      "name": "Spacer",
+      "settings": {}
+    },
+    "dynamic_image_blocks_N9TFqb": {
+      "type": "dynamic-image-blocks",
+      "blocks": {
+        "image_block_VpxNBd": {
+          "type": "image_block",
+          "settings": {
+            "desktop_image": "shopify://shop_images/ChatGPT_Image_Sep_3_2026_04_46_12_PM.png",
+            "mobile_image": "shopify://shop_images/Generated_with_Kive.ai_-_Create_a_premium_1_1_square_promotional_image_for_the_FCTR_Apparel_mobile_homepage_advertising_the_Nike__Under_Armour__and_adidas_sale._IMPORTANT_PRODUCT_REQU.png",
+            "link": "shopify://collections/fctr-apparel-sales",
+            "alt_text": "Collection image",
+            "size_mode": "original",
+            "image_width_desktop": "100%",
+            "image_height_desktop": "100px",
+            "image_width_mobile": "100%",
+            "image_height_mobile": "300px",
+            "object_fit": "cover",
+            "object_position": "center center",
+            "padding_top": "0px",
+            "padding_bottom": "0px",
+            "padding_left": "0px",
+            "padding_right": "0px",
+            "border_radius": "0px"
+          }
+        }
+      },
+      "block_order": [
+        "image_block_VpxNBd"
+      ],
+      "disabled": true,
+      "name": "Dynamic image blocks",
+      "settings": {
+        "full_width": true
+      }
+    },
+    "blocks_pjGbVj": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_94a3d1d_9RekrB": {
+          "type": "ai_gen_block_94a3d1d",
+          "settings": {
+            "desktop_height": 50,
+            "mobile_height": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_94a3d1d_9RekrB"
+      ],
+      "disabled": true,
+      "name": "Spacer",
+      "settings": {}
+    },
+    "fctr_november_feast": {
+      "type": "fctr-november-feast",
+      "name": "FCTR Feast + November sale",
+      "settings": {
+        "feast_collection": "fctr-feast",
+        "hero_product": "fctr-feast-adult-dishing-out-buckets-sweatshirt-1",
+        "sale_collection": "fctr-apparel-sales",
+        "men_sale": "mens-sale",
+        "women_sale": "womens-sale",
+        "youth_sale": "youth-sale",
+        "show_featured": true,
+        "cream": "#f4eddf",
+        "burgundy": "#742535",
+        "accent": "#cfdf42",
+        "ink": "#17191b",
+        "look_product_1": "fctr-feast-adult-feast-on-goals-long-sleeve-t-shirt",
+        "look_product_2": "fctr-feast-youth-feast-on-goals-long-sleeve-t-shirt",
+        "look_product_3": "fctr-feast-youth-dishing-out-buckets-hoodie",
+        "hero_image": "shopify://shop_images/FCTR-Feast-Adult-Models-2026.png",
+        "lifestyle_image": "shopify://shop_images/FCTR-Feast-Adult-Youth-Lifestyle-2026.png"
+      },
+      "blocks": {
+        "feast_adult_buckets": {
+          "type": "product",
+          "settings": {
+            "product": "fctr-feast-adult-dishing-out-buckets-sweatshirt-1"
+          }
+        },
+        "feast_youth_buckets": {
+          "type": "product",
+          "settings": {
+            "product": "fctr-feast-youth-dishing-out-buckets-hoodie"
+          }
+        },
+        "feast_adult_goals": {
+          "type": "product",
+          "settings": {
+            "product": "fctr-feast-adult-feast-on-goals-long-sleeve-t-shirt"
+          }
+        },
+        "feast_youth_goals": {
+          "type": "product",
+          "settings": {
+            "product": "fctr-feast-youth-feast-on-goals-long-sleeve-t-shirt"
+          }
+        }
+      },
+      "block_order": [
+        "feast_adult_buckets",
+        "feast_youth_buckets",
+        "feast_adult_goals",
+        "feast_youth_goals"
+      ]
+    }
+  },
+  "order": [
+    "fctr_november_feast",
+    "fctr_shop_finds_2026",
+    "dynamic_image_blocks_9X3Dej",
+    "blocks_FGiiTX",
+    "rich_text_MJbEzm",
+    "grid_dynamic_dynamic_gnXeP6",
+    "blocks_pppHXx",
+    "dynamic_image_blocks_N9TFqb",
+    "blocks_pjGbVj"
+  ]
+}

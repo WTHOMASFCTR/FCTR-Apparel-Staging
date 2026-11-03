@@ -1,0 +1,54 @@
+{% layout none %}
+{%- comment -%}
+  AJAX view for the inline team-bar search.
+
+  Called like:
+    /search?view=team-ajax&q=<terms AND collectionid:ID>&type=product&options[prefix]=last
+
+  All scoping to the team collection is done in the query
+  (via collectionid:ID). Here we just render product results.
+{%- endcomment -%}
+
+{% assign terms = search.terms | strip %}
+{% assign product_results = search.results | where: 'object_type', 'product' %}
+
+<!-- team-ajax DEBUG:
+     terms: {{ terms | default: 'NONE' }}
+     results_count: {{ search.results_count }}
+-->
+
+{% if search.performed and product_results.size > 0 %}
+  <ul class="team-bar__search-results-list">
+    {% assign shown = 0 %}
+    {% assign max_items = 10 %}
+
+    {% for product in product_results %}
+      <li class="team-bar__search-result-item">
+        <a href="{{ product.url }}" class="team-bar__search-result-link">
+          {% if product.featured_media %}
+            <span class="team-bar__search-result-image">
+              {{ product.featured_media
+                | image_url: width: 80
+                | image_tag: alt: product.title, loading: 'lazy' }}
+            </span>
+          {% endif %}
+
+          <span class="team-bar__search-result-meta">
+            <span class="team-bar__search-result-title">{{ product.title }}</span>
+            {% if product.price %}
+              <span class="team-bar__search-result-price">
+                {{ product.price | money }}
+              </span>
+            {% endif %}
+          </span>
+        </a>
+      </li>
+
+      {% assign shown = shown | plus: 1 %}
+      {% if shown >= max_items %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  </ul>
+{% endif %}
+

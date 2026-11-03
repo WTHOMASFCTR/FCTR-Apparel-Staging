@@ -1,0 +1,42 @@
+{% doc %}
+  Forwards a `return_to` query param through the customer login/register flow.
+
+  Liquid can't read query params, so this adds the value as the hidden input the
+  Liquid form tag would otherwise emit, and appends it to any link marked with
+  `data-return-to-forward` so it survives hopping between login and register.
+
+  Does nothing unless the current URL carries a same-site relative `return_to`,
+  so the default post-login destination is unchanged when it's absent.
+
+  @param {string} form_selector - CSS selector for the form that should receive the hidden input
+
+  @example
+  {% render 'return-to-forwarding', form_selector: 'form[action$="/account/login"]' %}
+{% enddoc %}
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const returnTo = new URLSearchParams(window.location.search).get('return_to');
+
+    // Relative same-site paths only — '//evil.com' would otherwise be an open redirect.
+    if (!returnTo || !returnTo.startsWith('/') || returnTo.startsWith('//')) {
+      return;
+    }
+
+    const form = document.querySelector({{ form_selector | json }});
+
+    if (form) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'return_to';
+      input.value = returnTo;
+      form.appendChild(input);
+    }
+
+    Array.from(document.querySelectorAll('[data-return-to-forward]')).forEach((link) => {
+      const url = new URL(link.href, window.location.origin);
+      url.searchParams.set('return_to', returnTo);
+      link.href = url.pathname + url.search;
+    });
+  });
+</script>

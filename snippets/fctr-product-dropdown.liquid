@@ -1,0 +1,202 @@
+{% doc %}
+  Renders a product dropdown with text, an uncropped image, or both.
+  @param {block} block - The product_accordion section block.
+{% enddoc %}
+
+{%- liquid
+  assign dropdown_mode = block.settings.content_type | default: 'both'
+  assign dropdown_text = block.settings.content
+  assign dropdown_image = block.settings.image
+  assign show_dropdown_text = false
+  assign show_dropdown_image = false
+
+  if dropdown_mode != 'image' and dropdown_text != blank
+    assign show_dropdown_text = true
+  endif
+
+  if dropdown_mode != 'text' and dropdown_image != blank
+    assign show_dropdown_image = true
+  endif
+-%}
+
+{%- if block.settings.heading != blank -%}
+  {%- if show_dropdown_text or show_dropdown_image -%}
+    <details
+      class="fctr-product-dropdown"
+      {% if block.settings.open_by_default %}open{% endif %}
+      {{ block.shopify_attributes }}
+    >
+      <summary class="fctr-product-dropdown__heading">
+        <span>{{ block.settings.heading | escape }}</span>
+        <span class="fctr-product-dropdown__icon" aria-hidden="true"></span>
+      </summary>
+
+      <div class="fctr-product-dropdown__body">
+        {%- if show_dropdown_text -%}
+          <div class="fctr-product-dropdown__text rte">
+            {{- dropdown_text -}}
+          </div>
+        {%- endif -%}
+
+        {%- if show_dropdown_image -%}
+          {%- assign dropdown_image_alt = dropdown_image.alt | default: block.settings.heading -%}
+          {%- capture dropdown_image_markup -%}
+            {{-
+              dropdown_image
+              | image_url: width: 2400
+              | image_tag:
+                class: 'fctr-product-dropdown__image',
+                loading: 'lazy',
+                widths: '240, 360, 480, 640, 800, 1000, 1200, 1600, 2000, 2400',
+                sizes: '(min-width: 1000px) 50vw, 100vw',
+                alt: dropdown_image_alt
+            -}}
+          {%- endcapture -%}
+
+          <div
+            class="fctr-product-dropdown__media"
+            style="--dropdown-image-width: {{ block.settings.image_width | default: 100 }}%;"
+          >
+            {%- if block.settings.image_link != blank -%}
+              <a class="fctr-product-dropdown__image-link" href="{{ block.settings.image_link | escape }}">
+                {{- dropdown_image_markup -}}
+              </a>
+            {%- else -%}
+              {{- dropdown_image_markup -}}
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+    </details>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .fctr-product-dropdown {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin-block: 0;
+    border-block-end: 1px solid rgba(0, 0, 0, 0.15);
+  }
+
+  .fctr-product-dropdown > .fctr-product-dropdown__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 18px;
+    cursor: pointer;
+    list-style: none;
+    font: inherit;
+    font-weight: 600;
+  }
+
+  .fctr-product-dropdown__heading::-webkit-details-marker {
+    display: none;
+  }
+
+  .fctr-product-dropdown__heading::marker {
+    content: '';
+  }
+
+  .fctr-product-dropdown__heading > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .fctr-product-dropdown__heading:focus-visible,
+  .fctr-product-dropdown__image-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+  }
+
+  .fctr-product-dropdown__icon {
+    position: relative;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+  }
+
+  .fctr-product-dropdown__icon::before,
+  .fctr-product-dropdown__icon::after {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    width: 10px;
+    height: 2px;
+    background: currentColor;
+    content: '';
+    transform: translate(-50%, -50%);
+  }
+
+  .fctr-product-dropdown__icon::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .fctr-product-dropdown[open] .fctr-product-dropdown__icon::after {
+    display: none;
+  }
+
+  .fctr-product-dropdown > .fctr-product-dropdown__body {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-block-end: 20px;
+  }
+
+  .fctr-product-dropdown__text {
+    overflow-wrap: anywhere;
+  }
+
+  .fctr-product-dropdown__text > :first-child {
+    margin-block-start: 0;
+  }
+
+  .fctr-product-dropdown__text > :last-child {
+    margin-block-end: 0;
+  }
+
+  .fctr-product-dropdown__text a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .fctr-product-dropdown__text + .fctr-product-dropdown__media {
+    margin-block-start: 16px;
+  }
+
+  .fctr-product-dropdown__media {
+    width: var(--dropdown-image-width, 100%);
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    margin-inline: auto;
+    overflow: visible;
+  }
+
+  .fctr-product-dropdown__image-link {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .fctr-product-dropdown .fctr-product-dropdown__image {
+    position: static;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: contain;
+    margin: 0;
+  }
+{% endstylesheet %}
